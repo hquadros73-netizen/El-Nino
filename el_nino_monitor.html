@@ -1,0 +1,2340 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Monitor El Niño 26/27 — Itaju do Colônia, BA</title>
+<style>
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #ffffff;
+    --bg2: #f7f6f3;
+    --bg3: #eeecea;
+    --border: #d8d6d0;
+    --border2: #c4c2bb;
+    --text: #1a1917;
+    --text2: #4a4844;
+    --text3: #7a7770;
+    --accent: #b84a1e;
+    --accent2: #1a5c8a;
+    --warn: #7a5c10;
+    --warn-bg: #fef6e4;
+    --danger: #9e2020;
+    --danger-bg: #fdf0f0;
+    --ok: #2a5c2a;
+    --ok-bg: #edf7ed;
+    --font-sans: 'IBM Plex Sans', system-ui, sans-serif;
+    --font-mono: 'IBM Plex Mono', monospace;
+    --r: 4px;
+    --r2: 6px;
+  }
+
+  html { background: var(--bg); color: var(--text); font-family: var(--font-sans); }
+  html, body { height: 100%; margin: 0; padding: 0; }
+
+  /* ---- LAYOUT ---- */
+  .app { display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+
+  header {
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+    padding: 12px 20px;
+    display: flex; align-items: center; justify-content: space-between;
+    position: sticky; top: 0; z-index: 100;
+  }
+  .header-left { display: flex; align-items: center; gap: 12px; }
+  .logo-badge {
+    background: var(--accent);
+    color: #fff;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 500;
+    padding: 4px 8px;
+    border-radius: var(--r);
+    letter-spacing: .06em;
+  }
+  .header-title { font-size: 13px; font-weight: 500; color: var(--text); }
+  .header-sub { font-size: 11px; color: var(--text3); margin-top: 1px; }
+  .status-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: #3a9e3a;
+    display: inline-block; margin-right: 6px;
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+  .status-text { font-size: 11px; color: var(--text3); font-family: var(--font-mono); }
+
+  .main { display: flex; flex-direction: row; flex: 1; min-height: 0; overflow: hidden; }
+
+  /* ---- SIDEBAR ---- */
+  .sidebar {
+    width: 260px;
+    flex-shrink: 0;
+    background: var(--bg2);
+    border-right: 1px solid var(--border);
+    display: flex; flex-direction: column;
+    overflow: hidden;
+  }
+  .sidebar-header {
+    padding: 12px 14px 8px;
+    border-bottom: 1px solid var(--border);
+    font-size: 10px; font-weight: 600; color: var(--text3);
+    letter-spacing: .1em; text-transform: uppercase;
+  }
+  .panel-list { overflow-y: auto; flex: 1; }
+  .panel-item {
+    padding: 10px 14px;
+    cursor: pointer;
+    border-bottom: 1px solid var(--border);
+    transition: background .12s;
+  }
+  .panel-item:hover { background: var(--bg3); }
+  .panel-item.active { background: var(--bg); border-left: 2px solid var(--accent); }
+  .panel-item-title { font-size: 13px; font-weight: 500; color: var(--text); }
+  .panel-item-sub { font-size: 11px; color: var(--text3); margin-top: 2px; }
+
+  .chat-area { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+
+  /* ---- CHAT ---- */
+  .chat-messages {
+    flex: 1; overflow-y: auto;
+    padding: 20px;
+    display: flex; flex-direction: column; gap: 14px;
+  }
+  .msg { display: flex; gap: 10px; max-width: 780px; }
+  .msg.user { flex-direction: row-reverse; align-self: flex-end; }
+  .msg-avatar {
+    width: 28px; height: 28px; border-radius: 50%;
+    flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 600;
+    border: 1px solid var(--border);
+  }
+  .msg-avatar.agent { background: var(--accent); color: #fff; border-color: var(--accent); font-family: var(--font-mono); }
+  .msg-avatar.user-av { background: var(--accent2); color: #fff; border-color: var(--accent2); }
+  .msg-bubble {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--r2);
+    padding: 10px 13px;
+    font-size: 13.5px;
+    line-height: 1.65;
+    color: var(--text);
+    max-width: 680px;
+  }
+  .msg.user .msg-bubble { background: #f0f4f8; border-color: #c0ccd8; }
+  .msg-bubble strong { font-weight: 600; }
+  .msg-bubble .tag {
+    display: inline-block;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    padding: 1px 6px;
+    border-radius: 3px;
+    margin-bottom: 6px;
+  }
+  .tag-src { background: var(--bg3); color: var(--text3); border: 1px solid var(--border); }
+  .tag-warn { background: var(--warn-bg); color: var(--warn); border: 1px solid #e8d190; }
+  .tag-ok { background: var(--ok-bg); color: var(--ok); border: 1px solid #a8d8a8; }
+  .tag-crit { background: var(--danger-bg); color: var(--danger); border: 1px solid #e8a0a0; }
+
+  /* data cards inside messages */
+  .data-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin: 8px 0; }
+  .data-card {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--r);
+    padding: 8px 10px;
+  }
+  .data-card-label { font-size: 10px; color: var(--text3); margin-bottom: 2px; }
+  .data-card-val { font-size: 15px; font-weight: 500; font-family: var(--font-mono); color: var(--text); }
+  .data-card-sub { font-size: 10px; color: var(--text3); margin-top: 1px; }
+  .data-card.warn { border-color: #e8d190; background: var(--warn-bg); }
+  .data-card.danger { border-color: #e8a0a0; background: var(--danger-bg); }
+  .data-card.ok { border-color: #a8d8a8; background: var(--ok-bg); }
+  .data-card-val.warn { color: var(--warn); }
+  .data-card-val.danger { color: var(--danger); }
+  .data-card-val.ok { color: var(--ok); }
+
+  /* comparison table */
+  .comp-table { width: 100%; border-collapse: collapse; font-size: 12px; margin: 8px 0; }
+  .comp-table th { background: var(--bg3); padding: 6px 8px; text-align: left; font-weight: 500; border: 1px solid var(--border); color: var(--text2); }
+  .comp-table td { padding: 6px 8px; border: 1px solid var(--border); color: var(--text); }
+  .comp-table tr:nth-child(even) td { background: var(--bg2); }
+  .val-danger { color: var(--danger); font-weight: 500; }
+  .val-warn { color: var(--warn); font-weight: 500; }
+  .val-ok { color: var(--ok); font-weight: 500; }
+
+  /* bar chart inline */
+  .bar-chart { margin: 8px 0; }
+  .bar-row { display: flex; align-items: center; gap: 8px; margin-bottom: 5px; font-size: 11px; }
+  .bar-label { width: 100px; color: var(--text3); flex-shrink: 0; text-align: right; }
+  .bar-track { flex: 1; height: 16px; background: var(--bg3); border-radius: 2px; overflow: hidden; border: 1px solid var(--border); }
+  .bar-fill { height: 100%; border-radius: 2px; display: flex; align-items: center; padding-left: 4px; font-size: 10px; font-weight: 500; transition: width .6s ease; }
+  .bar-val { width: 40px; color: var(--text2); font-family: var(--font-mono); }
+
+  /* timeline inline */
+  .tl { display: flex; margin: 8px 0; border-radius: var(--r); overflow: hidden; height: 24px; }
+  .tl-seg { display: flex; align-items: center; justify-content: center; font-size: 9.5px; font-weight: 500; }
+
+  /* loading */
+  .loading { display: flex; align-items: center; gap: 8px; padding: 8px 0; }
+  .loading-dots { display: flex; gap: 4px; }
+  .loading-dots span { width: 6px; height: 6px; border-radius: 50%; background: var(--border2); animation: ldots 1.2s infinite; }
+  .loading-dots span:nth-child(2) { animation-delay: .2s; }
+  .loading-dots span:nth-child(3) { animation-delay: .4s; }
+  @keyframes ldots { 0%,80%,100%{opacity:.3;transform:scale(.8)} 40%{opacity:1;transform:scale(1)} }
+  .loading-text { font-size: 12px; color: var(--text3); font-family: var(--font-mono); }
+
+  /* input area */
+  .input-area {
+    border-top: 1px solid var(--border);
+    background: var(--bg);
+    padding: 12px 20px;
+  }
+  .input-row { display: flex; gap: 8px; align-items: flex-end; }
+  .input-box {
+    flex: 1;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--r2);
+    padding: 9px 12px;
+    font-family: var(--font-sans);
+    font-size: 13.5px;
+    color: var(--text);
+    resize: none;
+    outline: none;
+    transition: border-color .15s;
+    min-height: 42px; max-height: 120px;
+  }
+  .input-box:focus { border-color: var(--accent2); }
+  .input-box::placeholder { color: var(--text3); }
+  .send-btn {
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: var(--r2);
+    padding: 0 16px;
+    height: 42px;
+    cursor: pointer;
+    font-family: var(--font-sans);
+    font-size: 13px;
+    font-weight: 500;
+    display: flex; align-items: center; gap: 6px;
+    transition: opacity .15s;
+    white-space: nowrap;
+  }
+  .send-btn:hover { opacity: .85; }
+  .send-btn:disabled { opacity: .4; cursor: default; }
+  .send-btn svg { width: 14px; height: 14px; fill: currentColor; }
+
+  .quick-btns { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px; }
+  .quick-btn {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--r);
+    padding: 5px 10px;
+    font-size: 11.5px;
+    color: var(--text2);
+    cursor: pointer;
+    font-family: var(--font-sans);
+    transition: background .12s, border-color .12s;
+  }
+  .quick-btn:hover { background: var(--bg3); border-color: var(--border2); }
+
+  /* chat content formatting */
+  .msg-bubble ul { margin: 6px 0 6px 16px; }
+  .msg-bubble li { margin-bottom: 3px; }
+  .divider { height: 1px; background: var(--border); margin: 8px 0; }
+  .source-row { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+  .source-chip { font-size: 10px; font-family: var(--font-mono); background: var(--bg3); border: 1px solid var(--border); padding: 2px 7px; border-radius: 3px; color: var(--text3); }
+  /* ---- EMBASAMENTO DINÂMICO ---- */
+  .embasamento-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 12px; margin-top: 8px; }
+  .emb-card { border-radius: var(--r2); border: 1px solid var(--border); padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; }
+  .emb-card.info    { background: var(--info-bg);   border-color: #90b8d8; }
+  .emb-card.warn    { background: var(--warn-bg);   border-color: #e0c070; }
+  .emb-card.ok      { background: var(--ok-bg);     border-color: #90c890; }
+  .emb-card.danger  { background: var(--danger-bg); border-color: #e0a0a0; }
+  .emb-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+  .emb-label  { font-size: 11px; font-weight: 600; color: var(--text2); margin-bottom: 3px; }
+  .emb-val    { font-size: 13px; font-weight: 500; }
+  .emb-val.info   { color: var(--info); }
+  .emb-val.warn   { color: var(--warn); }
+  .emb-val.ok     { color: var(--ok); }
+  .emb-val.danger { color: var(--danger); }
+  .emb-body   { font-size: 11.5px; color: var(--text2); line-height: 1.65; flex: 1; }
+  .emb-footer { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 4px; }
+  .emb-btn    { font-size: 10.5px; font-family: var(--font-sans); background: transparent; border: 1px solid var(--border2); border-radius: var(--r); padding: 3px 10px; cursor: pointer; color: var(--text2); transition: background .12s; }
+  .emb-btn:hover { background: var(--bg3); }
+  .emb-btn:disabled { opacity: 0.5; cursor: default; }
+  .emb-tag    { font-size: 9px; font-weight: 600; padding: 2px 7px; border-radius: 3px; white-space: nowrap; flex-shrink: 0; }
+  .tag-model  { background: #dce8f8; color: #1a4a7a; }
+  .tag-inst   { background: #e8f0dc; color: #3a5c1a; }
+  .tag-hist   { background: #f0e8dc; color: #6a4a1a; }
+  .emb-loading { font-size: 11px; color: var(--text3); font-style: italic; }
+
+  /* panel tabs */
+  .panel-content { display: none; flex-direction: column; overflow: hidden; height: 100%; }
+  .panel-content.active { display: flex; }
+
+  /* main area: chat vs panel */
+  .main-content { flex: 1; min-height: 0; overflow: hidden; display: flex; flex-direction: column; }
+
+  h2 { font-size: 14px; font-weight: 600; margin-bottom: 8px; color: var(--text); }
+  p { margin-bottom: 4px; }
+  .small { font-size: 12px; color: var(--text3); }
+  .mono { font-family: var(--font-mono); }
+
+  /* scroll */
+  ::-webkit-scrollbar { width: 5px; height: 5px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+
+  /* ---- PLUVIOMETRIA PANEL (transferred from ESTRAT) ---- */
+  .strat-table { width:100%;border-collapse:collapse;font-size:12px;margin:8px 0; }
+  .strat-table th { background:var(--bg3);padding:6px 8px;text-align:left;font-weight:500;border:1px solid var(--border);color:var(--text2); }
+  .strat-table td { padding:6px 8px;border:1px solid var(--border);color:var(--text);vertical-align:top; }
+  .strat-table tr:nth-child(even) td { background:var(--bg2); }
+  .td-ok { color:var(--ok);font-weight:500; }
+  .td-warn { color:var(--warn);font-weight:500; }
+  .td-danger { color:var(--danger);font-weight:500; }
+  .td-strat { color:#1a5c8a;font-weight:500; }
+  .alert-info { background:var(--ok-bg);border:1px solid #a8d8a8;border-radius:var(--r2);padding:10px 14px;margin:8px 0; }
+  .alert-info p { font-size:12px;color:var(--text2); }
+  .alert-warn { background:var(--warn-bg);border:1px solid #e8d190;border-radius:var(--r2);padding:10px 14px;margin:8px 0; }
+  .alert-warn p { font-size:12px;color:var(--text2); }
+  .alert-danger { background:var(--danger-bg);border:1px solid #e8a0a0;border-radius:var(--r2);padding:10px 14px;margin:8px 0; }
+  .alert-danger p { font-size:12px;color:var(--text2); }
+  .panel-scroll { flex:1;overflow-y:auto;padding:18px 20px; }
+  h3 { font-size:12.5px;font-weight:600;margin:12px 0 6px;color:var(--text2); }
+  /* ---- API KEY BAR ---- */
+  .apikey-bar { display:flex;align-items:center;gap:10px;padding:7px 20px;background:var(--warn-bg);border-bottom:1px solid #e8d190;font-size:12px;flex-wrap:wrap; }
+  .apikey-bar.connected { background:var(--ok-bg);border-color:#a8d8a8; }
+  .apikey-bar label { font-weight:500;white-space:nowrap;color:var(--text2); }
+  .apikey-input { font-family:var(--font-mono);font-size:11px;padding:4px 8px;border:1px solid var(--border2);border-radius:var(--r);background:var(--bg);color:var(--text);width:280px; }
+  .apikey-btn { font-size:11px;padding:4px 12px;background:var(--accent);color:#fff;border:none;border-radius:var(--r);cursor:pointer; }
+  .apikey-status { font-size:11px;color:var(--text3);font-family:var(--font-mono); }
+  .apikey-clear { font-size:10px;padding:2px 8px;background:transparent;border:1px solid #90c890;border-radius:var(--r);color:var(--ok);cursor:pointer; }
+</style>
+</head>
+<body>
+<div class="app">
+
+<header>
+  <div class="header-left">
+    <span class="logo-badge">EN·MON</span>
+    <div>
+      <div class="header-title">Monitor El Niño 26/27 — Itaju do Colônia, BA</div>
+      <div class="header-sub">Bacia Hidrográfica do Rio Colônia · Microclima Am · Pecuária de corte</div>
+    </div>
+  </div>
+  <div style="display:flex;align-items:center;gap:16px">
+    <div>
+      <span class="status-dot"></span>
+      <span class="status-text" id="header-status">Agente ativo · Carregando...</span>
+    </div>
+    <div style="font-size:11px;color:var(--text3);font-family:var(--font-mono)" id="clock">--:--</div>
+  </div>
+</header>
+
+<!-- API KEY BAR -->
+<div class="apikey-bar" id="apikey-bar">
+  <label>🔑 API Key Anthropic:</label>
+  <input class="apikey-input" id="apikey-input" type="password"
+    placeholder="sk-ant-api03-..." autocomplete="off" spellcheck="false"
+    onkeydown="if(event.key==='Enter') saveApiKey()">
+  <button class="apikey-btn" onclick="saveApiKey()">Conectar</button>
+  <span class="apikey-status" id="apikey-status">⚠ Necessária para usar os botões "Atualizar análise" e "Recalcular análogo" fora do Claude.ai</span>
+</div>
+<div class="main">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="sidebar-header">Painéis de análise</div>
+    <div class="panel-list">
+      <div class="panel-item active" onclick="setPanel('chat')" data-panel="chat">
+        <div class="panel-item-title">Agente IA</div>
+        <div class="panel-item-sub">Consulta e análise em tempo real</div>
+      </div>
+      <div class="panel-item" onclick="setPanel('status')" data-panel="status">
+        <div class="panel-item-title">Status ENSO atual</div>
+        <div class="panel-item-sub">Nino 3.4 · SST · Acoplamento</div>
+      </div>
+      <div class="panel-item" onclick="setPanel('compare')" data-panel="compare">
+        <div class="panel-item-title">El Niños análogos</div>
+        <div class="panel-item-sub">Comparativo histórico 72/73–15/16</div>
+      </div>
+      <div class="panel-item" onclick="setPanel('itaju')" data-panel="itaju">
+        <div class="panel-item-title">Pluviosidade — Itaju</div>
+        <div class="panel-item-sub">Climatologia vs anomalia EN</div>
+      </div>
+      <div class="panel-item" onclick="setPanel('forecast')" data-panel="forecast">
+        <div class="panel-item-title">Previsão sazonal 26/27</div>
+        <div class="panel-item-sub">NOAA · IRI · ECMWF · Climatempo</div>
+      </div>
+      <div class="panel-item" onclick="setPanel('pecuaria')" data-panel="pecuaria">
+        <div class="panel-item-title">Alerta pecuária</div>
+        <div class="panel-item-sub">Impactos pasto · rebanho · caixa</div>
+      </div>
+      <div class="panel-item" onclick="setPanel('chuvas')" data-panel="chuvas">
+        <div class="panel-item-title">🌧️ Pluviometria das fazendas</div>
+        <div class="panel-item-sub">50 anos · Normal e El Niño · 3 fazendas</div>
+      </div>
+      <div class="panel-item" onclick="setPanel('veredicto')" data-panel="veredicto">
+        <div class="panel-item-title">🔬 Veredicto 2015/16 vs 26/27</div>
+        <div class="panel-item-sub">Modelos · Bases históricas</div>
+      </div>
+      <div class="panel-item" onclick="setPanel('critica')" data-panel="critica">
+        <div class="panel-item-title">⚖️ Análise Crítica</div>
+        <div class="panel-item-sub">Divergência · Acurácia · Range</div>
+      </div>
+    </div>
+    <div style="padding:10px 14px;border-top:1px solid var(--border)">
+      <div style="font-size:10px;color:var(--text3);font-family:var(--font-mono)">FONTES INTEGRADAS</div>
+      <div style="font-size:10px;color:var(--text3);margin-top:4px;line-height:1.6">NOAA CPC · IRI Columbia<br>ECMWF SEAS5 · C3S · IOD<br>INMET · Caderno campo 23/24</div>
+    </div>
+  </div>
+
+  <!-- MAIN CONTENT AREA -->
+  <div class="main-content">
+
+    <!-- CHAT PANEL -->
+    <div class="panel-content active" id="panel-chat" style="display:flex;flex-direction:column;height:100%">
+      <div class="chat-messages" id="chat-messages">
+
+        <!-- Welcome message -->
+        <div class="msg">
+          <div class="msg-avatar agent">EN</div>
+          <div class="msg-bubble">
+            <span class="tag tag-ok">Sistema iniciado · jun/2026</span>
+            <p><strong>Agente Monitor El Niño 26/27 ativo.</strong></p>
+            <p style="margin-top:6px">Monitoro a evolução do fenômeno ENSO em tempo real, comparo com eventos históricos análogos e gero previsões contextualizadas para a região de <strong>Itaju do Colônia, BA</strong> e sua atividade de pecuária de corte.</p>
+            <div class="data-grid" style="margin-top:10px">
+              <div class="data-card danger">
+                <div class="data-card-label">Prob. El Niño (JJA 2026)</div>
+                <div class="data-card-val danger">92%</div>
+                <div class="data-card-sub">NOAA CPC · mai/26</div>
+              </div>
+              <div class="data-card danger">
+                <div class="data-card-label">Prob. El Niño (OND 2026)</div>
+                <div class="data-card-val danger">98%</div>
+                <div class="data-card-sub">NOAA CPC · mai/26</div>
+              </div>
+              <div class="data-card danger">
+                <div class="data-card-label">Muito Forte ≥2,0°C (OND)</div>
+                <div class="data-card-val danger">33%</div>
+                <div class="data-card-sub">NOAA CPC Strengths · mai/26</div>
+              </div>
+            </div>
+            <p style="margin-top:8px;font-size:12px;color:var(--text3)">Use os botões abaixo ou escreva sua pergunta. Explore os painéis laterais para dados detalhados.</p>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Input area -->
+      <div class="input-area">
+        <div class="quick-btns">
+          <button class="quick-btn" onclick="askQuestion('Qual o status atual do El Niño 26/27 e como compara com o 23/24?')">Status atual vs 23/24</button>
+          <button class="quick-btn" onclick="askQuestion('Quais são os El Niños históricos mais parecidos com o 26/27 em termos de temperatura no Pacífico e Atlântico?')">Análogos históricos</button>
+          <button class="quick-btn" onclick="askQuestion('Qual é a previsão de chuvas para Itaju do Colônia de mai/26 a abr/27?')">Previsão chuvas Itaju</button>
+          <button class="quick-btn" onclick="askQuestion('Quando devo tomar as principais decisões de manejo do rebanho baseado na evolução do EN 26/27?')">Calendário de manejo</button>
+          <button class="quick-btn" onclick="askQuestion('Qual a temperatura do Atlântico Tropical e como isso afeta o nordeste da Bahia?')">Atlântico Tropical</button>
+          <button class="quick-btn" onclick="askQuestion('Qual a intensidade esperada do EN 26/27 e qual o risco de Super El Niño?')">Intensidade esperada</button>
+        </div>
+        <div class="input-row">
+          <textarea class="input-box" id="user-input" placeholder="Pergunte sobre ENSO, pluviosidade em Itaju, impactos na pecuária, comparação histórica..." rows="1"
+            onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMessage()}"
+            oninput="autoResize(this)"></textarea>
+          <button class="send-btn" id="send-btn" onclick="sendMessage()">
+            <svg viewBox="0 0 16 16"><path d="M1.5 1.5l13 6.5-13 6.5V9.5l9-1.5-9-1.5V1.5z"/></svg>
+            Enviar
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- STATUS PANEL -->
+    <div class="panel-content" id="panel-status" style="overflow-y:auto;padding:20px">
+      <h2>Status ENSO — Abril 2026</h2>
+      <div class="data-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:16px">
+        <div class="data-card warn">
+          <div class="data-card-label">Nino 3.4 mensal</div>
+          <div class="data-card-val warn">+0,03°C</div>
+          <div class="data-card-sub">Mar/26 · ERSSTv5</div>
+        </div>
+        <div class="data-card warn">
+          <div class="data-card-label">Nino 3.4 semanal</div>
+          <div class="data-card-val warn">+0,5°C</div>
+          <div class="data-card-sub">Semana centrada 15/abr</div>
+        </div>
+        <div class="data-card ok">
+          <div class="data-card-label">La Niña (saindo)</div>
+          <div class="data-card-val ok">Encerrada</div>
+          <div class="data-card-sub">Feb/26 último mês ativo</div>
+        </div>
+        <div class="data-card danger">
+          <div class="data-card-label">Subsuperfície Pacífico</div>
+          <div class="data-card-val danger">+Forte</div>
+          <div class="data-card-sub">Calor acumulado 0–300m</div>
+        </div>
+        <div class="data-card warn">
+          <div class="data-card-label">Atlântico Tropical</div>
+          <div class="data-card-val warn">Acima média</div>
+          <div class="data-card-sub">Desfavorável ao NE</div>
+        </div>
+        <div class="data-card warn">
+          <div class="data-card-label">Acoplamento atmosférico</div>
+          <div class="data-card-val warn">Iniciando</div>
+          <div class="data-card-sub">Ventos W anomal. W Pac.</div>
+        </div>
+      </div>
+
+      <h2>Probabilidades por trimestre (NOAA/IRI abr/26)</h2>
+      <div class="bar-chart">
+        <div class="bar-row">
+          <span class="bar-label">AMJ 2026</span>
+          <div class="bar-track"><div class="bar-fill" style="width:70%;background:#c97a20;color:#fff">El Niño</div></div>
+          <span class="bar-val mono">70%</span>
+        </div>
+        <div class="bar-row">
+          <span class="bar-label">MJJ 2026</span>
+          <div class="bar-track"><div class="bar-fill" style="width:72%;background:#c97a20;color:#fff"></div></div>
+          <span class="bar-val mono">72%</span>
+        </div>
+        <div class="bar-row">
+          <span class="bar-label">JJA 2026</span>
+          <div class="bar-track"><div class="bar-fill" style="width:80%;background:#c0541a;color:#fff"></div></div>
+          <span class="bar-val mono">80%</span>
+        </div>
+        <div class="bar-row">
+          <span class="bar-label">ASO 2026</span>
+          <div class="bar-track"><div class="bar-fill" style="width:88%;background:#a8360e;color:#fff"></div></div>
+          <span class="bar-val mono">88%</span>
+        </div>
+        <div class="bar-row">
+          <span class="bar-label">OND 2026</span>
+          <div class="bar-track"><div class="bar-fill" style="width:94%;background:#8e2205;color:#fff"></div></div>
+          <span class="bar-val mono">94%</span>
+        </div>
+        <div class="bar-row">
+          <span class="bar-label">DJF 2026/27</span>
+          <div class="bar-track"><div class="bar-fill" style="width:90%;background:#8e2205;color:#fff"></div></div>
+          <span class="bar-val mono">~90%</span>
+        </div>
+      </div>
+
+      <h2 style="margin-top:16px">Linhas de tendência: Nino 3.4 histórico + previsão 2026</h2>
+      <div style="position:relative;height:180px;margin-bottom:16px">
+        <canvas id="ninoChart" role="img" aria-label="Gráfico Nino 3.4 mostrando evolução 2025-2027 comparada com EN 23/24">Dados Nino 3.4: La Niña em 2025, transição neutra início 2026, previsão El Niño forte em OND 2026.</canvas>
+      </div>
+
+      <div style="background:var(--warn-bg);border:1px solid #e8d190;border-radius:var(--r2);padding:10px 14px">
+        <p style="font-size:12px;color:var(--warn)"><strong>Ponto de atenção:</strong> A quantidade de calor subsuperficial acumulado no Pacífico equatorial em mar/2026 é comparável ao de mar/2023, que antecedeu o El Niño forte 23/24. O ECMWF aponta sinal de aquecimento mais forte em 2026 do que em 2023 no mesmo período (Fonte: ECMWF Science Blog, abr/26).</p>
+      </div>
+    </div>
+
+    <!-- COMPARE PANEL -->
+    <div class="panel-content" id="panel-compare" style="overflow-y:auto;padding:20px">
+      <h2>El Niños análogos ao 26/27 — seleção histórica</h2>
+      <p class="small" style="margin-bottom:12px">Critério de seleção: início com subsuperfície aquecida após La Niña · Atlântico Tropical quente · pico OND · intensidade forte/muito forte</p>
+
+      <table class="comp-table">
+        <thead>
+          <tr>
+            <th>Evento</th>
+            <th>Pico Nino3.4</th>
+            <th>Duração</th>
+            <th>Atlântico</th>
+            <th>Chuva Itaju* out–jan</th>
+            <th>Impacto pasto</th>
+            <th>Similaridade</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>1972/73</strong></td>
+            <td class="val-danger mono">+2,0°C</td>
+            <td>14 meses</td>
+            <td>Neutro</td>
+            <td class="val-warn">−40%</td>
+            <td class="val-danger">Grave</td>
+            <td class="val-warn">Moderada</td>
+          </tr>
+          <tr>
+            <td><strong>1982/83</strong></td>
+            <td class="val-danger mono">+2,2°C</td>
+            <td>18 meses</td>
+            <td>Quente</td>
+            <td class="val-danger">−55%</td>
+            <td class="val-danger">Muito grave</td>
+            <td class="val-warn">Alta</td>
+          </tr>
+          <tr>
+            <td><strong>1987/88</strong></td>
+            <td class="val-warn mono">+1,7°C</td>
+            <td>12 meses</td>
+            <td>Quente</td>
+            <td class="val-warn">−30%</td>
+            <td class="val-warn">Moderado</td>
+            <td class="val-ok">Boa</td>
+          </tr>
+          <tr>
+            <td><strong>1991/92</strong></td>
+            <td class="val-warn mono">+1,6°C</td>
+            <td>24 meses</td>
+            <td>Neutro-quente</td>
+            <td class="val-warn">−35%</td>
+            <td class="val-warn">Moderado</td>
+            <td class="val-warn">Moderada</td>
+          </tr>
+          <tr>
+            <td><strong>1997/98</strong></td>
+            <td class="val-danger mono">+2,8°C</td>
+            <td>14 meses</td>
+            <td>Quente</td>
+            <td class="val-danger">−60%</td>
+            <td class="val-danger">Extremo</td>
+            <td class="val-warn">Moderada</td>
+          </tr>
+          <tr>
+            <td><strong>2015/16</strong></td>
+            <td class="val-danger mono">+2,4°C</td>
+            <td>15 meses</td>
+            <td>Muito quente</td>
+            <td class="val-danger">−50%</td>
+            <td class="val-danger">Grave</td>
+            <td class="val-danger">Alta</td>
+          </tr>
+          <tr>
+            <td><strong>2023/24</strong></td>
+            <td class="val-danger mono">+1,9°C</td>
+            <td>13 meses</td>
+            <td>Muito quente</td>
+            <td class="val-danger">−45%</td>
+            <td class="val-danger">Grave</td>
+            <td class="val-danger">Muito alta</td>
+          </tr>
+          <tr style="background:#fff8f0">
+            <td><strong>2026/27 ⟶</strong></td>
+            <td class="val-danger mono">+1,5–2,0°C*</td>
+            <td>~14 meses*</td>
+            <td>Quente*</td>
+            <td class="val-danger">−40 a −55%*</td>
+            <td class="val-danger">Grave*</td>
+            <td style="color:var(--accent);font-weight:600">Evento ativo</td>
+          </tr>
+        </tbody>
+      </table>
+      <p class="small" style="margin-top:6px">* Itaju do Colônia: sem estação pluviométrica oficial com série longa. Estimativa com base em Itabuna (INMET) e correlação com Nino 3.4 nos eventos listados. (*) previsão.</p>
+
+      <div style="margin-top:16px;position:relative;height:200px">
+        <canvas id="analogChart" role="img" aria-label="Comparativo de anomalia de chuva nos eventos análogos">Comparativo anomalia pluviométrica: EN 82/83 −55%, 97/98 −60%, 15/16 −50%, 23/24 −45%, 26/27 est. −45%.</canvas>
+      </div>
+
+      <div style="margin-top:14px;background:var(--danger-bg);border:1px solid #e8a0a0;border-radius:var(--r2);padding:10px 14px">
+        <p style="font-size:12px;color:var(--danger)"><strong>Análogo mais próximo:</strong> EN 2023/24 (correlação muito alta). Secundário: EN 2015/16 (Atlântico muito quente + pico OND). O 1982/83 é referência de cenário severo (25% de chance de "super EN" em 2026 segundo NOAA). <strong>Em todos os análogos, o déficit mais crítico ocorre em out–dez no sudoeste da Bahia.</strong></p>
+      </div>
+    </div>
+
+    <!-- ITAJU PANEL -->
+    <div class="panel-content" id="panel-itaju" style="overflow-y:auto;padding:20px">
+      <h2>Pluviosidade — Itaju do Colônia e região</h2>
+      <p class="small" style="margin-bottom:12px">Referência: Estação Itabuna (INMET A418) · Bacia do Rio Colônia · Microclima Am (tropical monção)</p>
+
+      <div class="data-grid" style="margin-bottom:16px">
+        <div class="data-card">
+          <div class="data-card-label">Chuva anual média (normal)</div>
+          <div class="data-card-val">1.100–1.400 mm</div>
+          <div class="data-card-sub">Gradiente leste-oeste</div>
+        </div>
+        <div class="data-card warn">
+          <div class="data-card-label">Anomalia EN forte (out–fev)</div>
+          <div class="data-card-val warn">−40 a −60%</div>
+          <div class="data-card-sub">Média eventos análogos</div>
+        </div>
+        <div class="data-card danger">
+          <div class="data-card-label">Período crítico para pasto</div>
+          <div class="data-card-val danger">Set–Jan</div>
+          <div class="data-card-sub">Estação chuvosa atrasada</div>
+        </div>
+      </div>
+
+      <h2>Climatologia mensal normal vs EN forte — estimativa Itaju</h2>
+      <div style="position:relative;height:220px;margin-bottom:16px">
+        <canvas id="itajuChart" role="img" aria-label="Gráfico pluviosidade Itaju normal vs El Niño forte por mês">Climatologia Itaju: pico jan 200mm, seca jun–ago 20mm. El Niño forte: redução acentuada set–jan.</canvas>
+      </div>
+
+      <h2>Episódio 23/24 documentado (caderno de campo)</h2>
+      <table class="comp-table">
+        <thead><tr><th>Período</th><th>Previsto (normal)</th><th>Observado</th><th>Anomalia</th><th>Impacto</th></tr></thead>
+        <tbody>
+          <tr><td>Out/23</td><td>100–130 mm</td><td class="val-danger">~20–30 mm</td><td class="val-danger">−80%</td><td>Pasto para degradação</td></tr>
+          <tr><td>Nov/23</td><td>110–140 mm</td><td class="val-danger">~30–50 mm</td><td class="val-danger">−65%</td><td>GPD zerou (anotação 27/11)</td></tr>
+          <tr><td>Dez/23</td><td>150–180 mm</td><td class="val-danger">~40–60 mm</td><td class="val-danger">−70%</td><td>Situação crítica BN</td></tr>
+          <tr><td>Jan/24</td><td>160–200 mm</td><td class="val-warn">110–160 mm</td><td class="val-warn">−30%</td><td>Chuvas chegaram 04/01</td></tr>
+          <tr><td>Fev/24</td><td>130–160 mm</td><td class="val-ok">Normal</td><td class="val-ok">~0%</td><td>Recuperação do pasto</td></tr>
+        </tbody>
+      </table>
+
+      <div style="margin-top:14px;background:var(--warn-bg);border:1px solid #e8d190;border-radius:var(--r2);padding:10px 14px">
+        <p style="font-size:12px;color:var(--warn)"><strong>Lição 23/24:</strong> A região possui um fator agravante — mesmo em anos normais o déficit hídrico entre mai–set é severo (microclima Am). O El Niño estende esse déficit para out–dez, criando uma janela de 7–8 meses com restrição hídrica severa, inédita em intensidade. O ano começa com pastagem já comprometida pela seca precedente.</p>
+      </div>
+    </div>
+
+    <!-- FORECAST PANEL -->
+    <div class="panel-content" id="panel-forecast" style="overflow-y:auto;padding:20px">
+      <h2>Previsão sazonal 26/27 — síntese dos modelos</h2>
+
+      <div class="data-grid" style="margin-bottom:16px">
+        <div class="data-card">
+          <div class="data-card-label">NOAA CPC</div>
+          <div class="data-card-val warn">Mod–Forte</div>
+          <div class="data-card-sub">1 em 3 chance de forte (≥1,5°C OND)</div>
+        </div>
+        <div class="data-card danger">
+          <div class="data-card-label">IRI Columbia</div>
+          <div class="data-card-val danger">88–94%</div>
+          <div class="data-card-sub">Maior skill do período</div>
+        </div>
+        <div class="data-card warn">
+          <div class="data-card-label">ECMWF C3S</div>
+          <div class="data-card-val warn">Mod.→Forte</div>
+          <div class="data-card-sub">Sinal mais forte que mar/23</div>
+        </div>
+      </div>
+
+      <h2>Cronograma previsto por modelo — Nino 3.4 trimestral</h2>
+      <table class="comp-table">
+        <thead><tr><th>Trimestre</th><th>NOAA CPC</th><th>IRI</th><th>ECMWF</th><th>Climatempo</th><th>Impacto Itaju</th></tr></thead>
+        <tbody>
+          <tr><td>AMJ 2026</td><td class="val-warn">Neutro→EN fraco</td><td class="val-warn">EN 70%</td><td class="val-warn">+0,5–0,8°C</td><td class="val-warn">Neutral→EN</td><td class="val-ok">Baixo</td></tr>
+          <tr><td>JJA 2026</td><td class="val-warn">EN fraco–mod.</td><td class="val-warn">EN 80%</td><td class="val-warn">+0,8–1,2°C</td><td class="val-warn">EN fraco</td><td class="val-warn">Moderado</td></tr>
+          <tr><td>ASO 2026</td><td class="val-danger">EN moderado</td><td class="val-danger">EN 88%</td><td class="val-danger">+1,2–1,6°C</td><td class="val-danger">EN mod.–forte</td><td class="val-danger">Alto</td></tr>
+          <tr><td>OND 2026</td><td class="val-danger">EN forte</td><td class="val-danger">EN 94%</td><td class="val-danger">+1,5–2,0°C</td><td class="val-danger">EN forte</td><td class="val-danger">Crítico</td></tr>
+          <tr><td>DJF 2026/27</td><td class="val-danger">EN forte</td><td class="val-danger">EN ~90%</td><td class="val-danger">+1,5–2,0°C</td><td class="val-danger">EN forte</td><td class="val-danger">Crítico</td></tr>
+          <tr><td>MAM 2027</td><td class="val-warn">Dissipação</td><td class="val-warn">EN→Neutro</td><td class="val-warn">+0,5–1,0°C</td><td class="val-warn">Dissipação</td><td class="val-warn">Moderado</td></tr>
+        </tbody>
+      </table>
+
+      <h2 style="margin-top:14px">Previsão de precipitação para sul da Bahia — 2026/27</h2>
+      <table class="comp-table">
+        <thead><tr><th>Mês</th><th>Normal (mm)</th><th>Previsão EN 26/27</th><th>Desvio est.</th><th>Confiança</th></tr></thead>
+        <tbody>
+          <tr><td>Mai/26</td><td>80–100</td><td class="val-warn">50–70</td><td class="val-warn">−30%</td><td>Alta</td></tr>
+          <tr><td>Jun/26</td><td>40–60</td><td>30–50</td><td>−20%</td><td>Média</td></tr>
+          <tr><td>Jul/26</td><td>20–35</td><td>15–30</td><td>−15%</td><td>Média</td></tr>
+          <tr><td>Ago/26</td><td>20–30</td><td>10–20</td><td>−30%</td><td>Média</td></tr>
+          <tr><td>Set/26</td><td>40–70</td><td class="val-danger">15–35</td><td class="val-danger">−55%</td><td>Alta</td></tr>
+          <tr><td>Out/26</td><td>90–130</td><td class="val-danger">35–65</td><td class="val-danger">−55%</td><td>Alta</td></tr>
+          <tr><td>Nov/26</td><td>110–150</td><td class="val-danger">50–85</td><td class="val-danger">−45%</td><td>Alta</td></tr>
+          <tr><td>Dez/26</td><td>140–180</td><td class="val-danger">65–100</td><td class="val-danger">−45%</td><td>Alta</td></tr>
+          <tr><td>Jan/27</td><td>160–200</td><td class="val-warn">100–140</td><td class="val-warn">−30%</td><td>Média</td></tr>
+          <tr><td>Fev/27</td><td>130–160</td><td class="val-warn">100–130</td><td class="val-warn">−15%</td><td>Média</td></tr>
+          <tr><td>Mar/27</td><td>120–150</td><td>100–130</td><td>−10%</td><td>Baixa</td></tr>
+          <tr><td>Abr/27</td><td>90–120</td><td>80–110</td><td>−5%</td><td>Baixa</td></tr>
+        </tbody>
+      </table>
+      <p class="small" style="margin-top:6px">Estimativas baseadas em climatologia histórica EN forte no sudoeste da Bahia · Referência: análogos 23/24 e 15/16. Atualizar conforme boletins INMET/NOAA mensais.</p>
+    </div>
+
+    <!-- PECUARIA PANEL -->
+    <div class="panel-content" id="panel-pecuaria" style="overflow-y:auto;padding:20px">
+      <h2>Alerta pecuária — 2.658 cabeças · 1.350 ha · Itaju do Colônia</h2>
+
+      <div style="background:var(--danger-bg);border:1px solid #e8a0a0;border-radius:var(--r2);padding:10px 14px;margin-bottom:14px">
+        <p style="font-size:13px;color:var(--danger);font-weight:600">⚠ Alerta ativo: El Niño 26/27 em formação · Janela de preparação: abr–jun/26</p>
+        <p style="font-size:12px;color:var(--danger);margin-top:4px">Com 88–94% de probabilidade de El Niño forte em OND/26, o cenário é comparável a 23/24. O acoplamento atmosférico pode ocorrer mais cedo (out/26 vs dez/23), ampliando o período de impacto.</p>
+      </div>
+
+      <h2>Indicadores de risco por período</h2>
+      <table class="comp-table">
+        <thead><tr><th>Período</th><th>Risco pasto</th><th>Risco GPD</th><th>Risco monta</th><th>Ação prioritária</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Abr–Jun/26</strong></td><td class="val-ok">Baixo</td><td class="val-ok">Normal</td><td class="val-ok">Normal</td><td>Preparação: silagem, reservatórios</td></tr>
+          <tr><td><strong>Jul–Set/26</strong></td><td class="val-warn">Moderado</td><td class="val-warn">−20%</td><td class="val-warn">Moderado</td><td>Descarte estratégico · supl. mineral</td></tr>
+          <tr><td><strong>Out–Dez/26</strong></td><td class="val-danger">Crítico</td><td class="val-danger">Zero/negativo</td><td class="val-danger">Alto</td><td>Gestão de crise · racionamento</td></tr>
+          <tr><td><strong>Jan–Mar/27</strong></td><td class="val-warn">Moderado</td><td class="val-warn">−15%</td><td class="val-ok">IATF estratégica</td><td>Recuperação pasto · IATF lote sel.</td></tr>
+        </tbody>
+      </table>
+
+      <h2 style="margin-top:14px">Impacto financeiro estimado (2.658 cab)</h2>
+      <div class="bar-chart" style="margin-bottom:14px">
+        <div class="bar-row">
+          <span class="bar-label" style="font-size:10px">Suplementação 5 meses</span>
+          <div class="bar-track"><div class="bar-fill" style="width:55%;background:#c0541a;color:#fff">R$600k–800k</div></div>
+          <span class="bar-val mono" style="font-size:10px"></span>
+        </div>
+        <div class="bar-row">
+          <span class="bar-label" style="font-size:10px">Queda receita GPD</span>
+          <div class="bar-track"><div class="bar-fill" style="width:45%;background:#a8360e;color:#fff">R$400k–700k</div></div>
+          <span class="bar-val mono" style="font-size:10px"></span>
+        </div>
+        <div class="bar-row">
+          <span class="bar-label" style="font-size:10px">Descarte preço depress.</span>
+          <div class="bar-track"><div class="bar-fill" style="width:30%;background:#8e2205;color:#fff">R$200k–400k</div></div>
+          <span class="bar-val mono" style="font-size:10px"></span>
+        </div>
+      </div>
+
+      <div style="background:var(--warn-bg);border:1px solid #e8d190;border-radius:var(--r2);padding:10px 14px">
+        <p style="font-size:12px;color:var(--warn)"><strong>Reserva de caixa mínima recomendada:</strong> R$400–600k disponíveis antes de out/26. Cobrir simultaneamente: rotina + emergência suplementação + absorção queda receita. Esta foi a lição-chave documentada no caderno de campo EN 23/24.</p>
+      </div>
+    </div>
+
+
+<!-- CHUVAS PANEL -->
+    <div class="panel-content" id="panel-chuvas" style="overflow-y:auto;padding:20px">
+        <h2>Pluviometria das Fazendas — 50 anos de dados (1975–2024)</h2>
+        <p class="small" style="margin-bottom:6px">Série histórica da região de Itaju do Colônia (posto pluviométrico regional) ajustada pelos microlimas de cada fazenda. Dados mensais reais de 2025 disponíveis para Bela Nova, Imbira e Bom Jardim.</p>
+
+        <div class="alert-info" style="margin-bottom:10px">
+          <p><strong>Interpretação-chave:</strong> O EN não reduz significativamente o <em>total anual</em> na região — a média histórica é ~870 mm e em anos EN forte ficou em ~860 mm. O impacto real está na <strong>distribuição temporal</strong>: veranicos mais longos, chuvas mais concentradas em poucos eventos, e alta variabilidade nos meses Jun–Set (CV &gt;40%). Na pecuária, o que mata pasto não é falta de chuva anual, é o veranico de 30–60 dias no meio da estação seca ampliada.</p>
+        </div>
+
+        <h3>Volume anual esperado por fazenda</h3>
+        <table class="strat-table">
+          <thead><tr><th>Fazenda</th><th>Microclima</th><th>Ano Normal</th><th>EN Fraco<br>−1,6%</th><th>EN Moderado<br>−4,5%</th><th>EN Forte<br>−1,4%</th><th>Ano Muito Seco<br>(P10)</th></tr></thead>
+          <tbody>
+            <tr>
+              <td><strong>Bela Nova</strong><br><span class="small">15°01'56"S 39°40'26"W</span></td>
+              <td class="td-ok">+10% · mais úmido<br>Encosta NE protegida</td>
+              <td class="mono td-ok">964 mm</td>
+              <td class="mono">949 mm</td>
+              <td class="mono td-warn">921 mm</td>
+              <td class="mono">951 mm</td>
+              <td class="mono td-danger">~720 mm</td>
+            </tr>
+            <tr>
+              <td><strong>Imbira</strong><br><span class="small">15°01'15"S 39°34'02"W</span></td>
+              <td>Média regional</td>
+              <td class="mono td-ok">877 mm</td>
+              <td class="mono">863 mm</td>
+              <td class="mono td-warn">837 mm</td>
+              <td class="mono">864 mm</td>
+              <td class="mono td-danger">~655 mm</td>
+            </tr>
+            <tr>
+              <td><strong>Bom Jardim</strong><br><span class="small">15°07'09"S 39°38'36"W</span></td>
+              <td class="td-warn">−10% · mais seco<br>Posição mais interior</td>
+              <td class="mono">789 mm</td>
+              <td class="mono">776 mm</td>
+              <td class="mono td-danger">753 mm</td>
+              <td class="mono">778 mm</td>
+              <td class="mono td-danger">~589 mm</td>
+            </tr>
+            <tr style="background:var(--bg2)">
+              <td><strong>Dados reais 2025</strong></td>
+              <td class="small">Pluviômetros locais</td>
+              <td class="mono td-ok">937 mm</td>
+              <td class="mono td-ok">911 mm</td>
+              <td class="mono">816 mm</td>
+              <td colspan="2" class="small" style="color:var(--text3)">Bela Nova · Imbira · Bom Jardim (2025)</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h3>Distribuição mensal histórica — Região Itaju (base 50 anos)</h3>
+        <p class="small" style="margin-bottom:6px">Média mensal, percentis e índice de veranico grave (&lt;75% da normal). Ajuste por fazenda: Bela Nova ×1,10 · Imbira ×1,00 · Bom Jardim ×0,90</p>
+        <table class="strat-table">
+          <thead><tr><th>Mês</th><th>Média<br>(mm)</th><th>P10<br>Muito seco</th><th>P25<br>Seco</th><th>P50<br>Mediana</th><th>P75<br>Úmido</th><th>CV%</th><th>Risco<br>veranico</th><th>Estação</th></tr></thead>
+          <tbody>
+            <tr><td>Jan</td><td class="mono">78,6</td><td class="mono td-danger">55</td><td class="mono">62</td><td class="mono">76</td><td class="mono">94</td><td class="mono">23,6%</td><td class="td-ok">14%</td><td>Chuvosa</td></tr>
+            <tr><td>Fev</td><td class="mono">72,5</td><td class="mono td-danger">48</td><td class="mono">57</td><td class="mono">72</td><td class="mono">88</td><td class="mono">25,9%</td><td class="td-ok">24%</td><td>Chuvosa</td></tr>
+            <tr><td>Mar</td><td class="mono td-strat">102,5</td><td class="mono">78</td><td class="mono">89</td><td class="mono">101</td><td class="mono">121</td><td class="mono">17,9%</td><td class="td-ok">6%</td><td>Pico chuvosa</td></tr>
+            <tr><td>Abr</td><td class="mono">78,3</td><td class="mono">57</td><td class="mono">63</td><td class="mono">76</td><td class="mono">93</td><td class="mono">22,7%</td><td class="td-ok">12%</td><td>Transição</td></tr>
+            <tr><td>Mai</td><td class="mono">52,4</td><td class="mono td-warn">28</td><td class="mono">38</td><td class="mono">51</td><td class="mono">65</td><td class="mono">32,4%</td><td class="td-warn">26%</td><td>Transição</td></tr>
+            <tr style="background:var(--warn-bg)"><td><strong>Jun</strong></td><td class="mono">44,1</td><td class="mono td-danger">18</td><td class="mono">27</td><td class="mono">42</td><td class="mono">64</td><td class="mono td-danger">42,1% ⚠</td><td class="td-warn">28%</td><td><strong>Seca</strong></td></tr>
+            <tr style="background:var(--warn-bg)"><td><strong>Jul</strong></td><td class="mono">45,4</td><td class="mono td-danger">19</td><td class="mono">28</td><td class="mono">48</td><td class="mono">65</td><td class="mono td-danger">44,6% ⚠</td><td class="td-warn">38%</td><td><strong>Seca</strong></td></tr>
+            <tr style="background:var(--danger-bg)"><td><strong>Ago</strong></td><td class="mono">40,8</td><td class="mono td-danger">18</td><td class="mono">25</td><td class="mono">42</td><td class="mono">56</td><td class="mono td-danger">41,3% ⚠</td><td class="td-danger">32%</td><td><strong>Seca crítica</strong></td></tr>
+            <tr style="background:var(--danger-bg)"><td><strong>Set</strong></td><td class="mono">42,1</td><td class="mono td-danger">19</td><td class="mono">27</td><td class="mono">44</td><td class="mono">58</td><td class="mono td-danger">42,0% ⚠</td><td class="td-danger">32%</td><td><strong>Seca crítica</strong></td></tr>
+            <tr><td>Out</td><td class="mono">66,2</td><td class="mono">43</td><td class="mono">49</td><td class="mono">66</td><td class="mono">81</td><td class="mono">27,7%</td><td class="td-warn">30%</td><td>Retomada</td></tr>
+            <tr><td><strong>Nov</strong></td><td class="mono td-strat">127,4</td><td class="mono">110</td><td class="mono">115</td><td class="mono">127</td><td class="mono">139</td><td class="mono">11,8%</td><td class="td-ok">0%</td><td><strong>Pico chuvosa</strong></td></tr>
+            <tr><td><strong>Dez</strong></td><td class="mono td-strat">120,3</td><td class="mono">97</td><td class="mono">106</td><td class="mono">121</td><td class="mono">134</td><td class="mono">13,6%</td><td class="td-ok">0%</td><td><strong>Pico chuvosa</strong></td></tr>
+          </tbody>
+        </table>
+
+        <div class="alert-warn" style="margin-top:10px">
+          <p><strong>⚠ Alta variabilidade (CV &gt;40%) em Jun–Set:</strong> Nesses meses, a chuva pode variar de quase zero a 74 mm. Em 38% dos anos históricos, julho ficou abaixo de 34 mm. Essa imprevisibilidade é o maior risco para a pecuária — e é exatamente o que o El Niño amplifica.</p>
+        </div>
+
+        <h3>Como o El Niño afeta a distribuição mensal — índice por mês</h3>
+        <p class="small" style="margin-bottom:6px">Índice = chuva média EN ÷ chuva média normal. &lt;0,80 = redução significativa · &gt;1,20 = excesso. Baseado em anos canônicos EN forte na série (1982-83, 1997-98, 2015-16).</p>
+        <table class="strat-table">
+          <thead><tr><th>Mês</th><th>Normal<br>(mm)</th><th>EN Fraco<br>(mm · idx)</th><th>EN Moderado<br>(mm · idx)</th><th>EN Forte<br>(mm · idx)</th><th>Impacto dominante</th></tr></thead>
+          <tbody>
+            <tr><td>Jan</td><td class="mono">78,6</td><td class="mono">72,5 · <span style="color:var(--text3)">0,93</span></td><td class="mono">90,8 · <span style="color:var(--ok)">1,17</span></td><td class="mono">75,8 · <span style="color:var(--text3)">0,97</span></td><td>Variável · EN mod pode trazer mais chuva em Jan</td></tr>
+            <tr><td>Fev</td><td class="mono">72,5</td><td class="mono">66,8 · <span style="color:var(--text3)">0,93</span></td><td class="mono">82,2 · <span style="color:var(--ok)">1,14</span></td><td class="mono">72,5 · <span style="color:var(--text3)">1,01</span></td><td>Pouco impacto no total</td></tr>
+            <tr><td>Mar</td><td class="mono">102,5</td><td class="mono">105,5 · <span style="color:var(--ok)">1,02</span></td><td class="mono">99,2 · <span style="color:var(--text3)">0,96</span></td><td class="mono">97,5 · <span style="color:var(--text3)">0,95</span></td><td>Leve redução em EN · pasto ainda recupera</td></tr>
+            <tr><td>Abr</td><td class="mono">78,3</td><td class="mono">73,8 · <span style="color:var(--text3)">0,90</span></td><td class="mono">57,0 · <span class="td-danger">0,69</span></td><td class="mono">74,2 · <span style="color:var(--text3)">0,90</span></td><td>EN mod. reduz Abr significativamente (-31%)</td></tr>
+            <tr><td>Mai</td><td class="mono">52,4</td><td class="mono">71,2 · <span style="color:var(--ok)">1,39</span></td><td class="mono">53,0 · <span style="color:var(--text3)">1,04</span></td><td class="mono">44,0 · <span style="color:var(--text3)">0,86</span></td><td>EN fraco pode concentrar mais chuva em Mai</td></tr>
+            <tr style="background:var(--warn-bg)"><td><strong>Jun</strong></td><td class="mono">44,1</td><td class="mono">45,2 · <span style="color:var(--text3)">1,07</span></td><td class="mono">44,4 · <span style="color:var(--text3)">1,05</span></td><td class="mono td-warn">59,5 · <span style="color:var(--ok)">1,41</span></td><td>EN forte paradoxalmente eleva Jun (+41%) — concentrado</td></tr>
+            <tr style="background:var(--warn-bg)"><td><strong>Jul</strong></td><td class="mono">45,4</td><td class="mono td-warn">31,8 · <span class="td-danger">0,68</span></td><td class="mono">46,0 · <span style="color:var(--text3)">0,99</span></td><td class="mono">47,0 · <span style="color:var(--text3)">1,01</span></td><td>EN fraco reduz Jul (-32%)</td></tr>
+            <tr style="background:var(--danger-bg)"><td><strong>Ago</strong></td><td class="mono">40,8</td><td class="mono td-danger">26,5 · <span class="td-danger">0,61</span></td><td class="mono">36,6 · <span style="color:var(--text3)">0,85</span></td><td class="mono">39,0 · <span style="color:var(--text3)">0,90</span></td><td>🔴 EN fraco seca agosto intensamente (-39%)</td></tr>
+            <tr style="background:var(--danger-bg)"><td><strong>Set</strong></td><td class="mono">42,1</td><td class="mono">44,0 · <span style="color:var(--text3)">1,02</span></td><td class="mono">39,0 · <span style="color:var(--text3)">0,91</span></td><td class="mono">35,8 · <span class="td-warn">0,83</span></td><td>EN forte reduz Set (-17%) · retorno tardio das chuvas</td></tr>
+            <tr><td>Out</td><td class="mono">66,2</td><td class="mono">71,2 · <span style="color:var(--ok)">1,06</span></td><td class="mono">54,4 · <span class="td-warn">0,81</span></td><td class="mono">66,2 · <span style="color:var(--text3)">0,99</span></td><td>EN mod. atrasa retorno das chuvas em Out</td></tr>
+            <tr><td>Nov</td><td class="mono td-strat">127,4</td><td class="mono td-ok">132,2 · <span style="color:var(--ok)">1,04</span></td><td class="mono td-ok">126,4 · <span style="color:var(--text3)">1,00</span></td><td class="mono td-ok">130,8 · <span style="color:var(--ok)">1,03</span></td><td>✓ Nov é consistente em todos os cenários EN</td></tr>
+            <tr><td>Dez</td><td class="mono td-strat">120,3</td><td class="mono td-ok">122,0 · <span style="color:var(--text3)">1,00</span></td><td class="mono td-warn">108,2 · <span class="td-warn">0,89</span></td><td class="mono td-ok">121,8 · <span style="color:var(--text3)">1,00</span></td><td>EN mod. pode atrasar Dez (-11%)</td></tr>
+          </tbody>
+        </table>
+
+        <div class="alert-danger" style="margin-top:10px">
+          <p><strong>🔴 Conclusão crítica para pecuária:</strong> O El Niño não reduz muito o total anual (~1–5%), mas <strong>alonga e aprofunda a seca de inverno</strong>. O risco real é o período Ago–Set que já é naturalmente crítico (CV &gt;40%, 32% de chance de veranico grave em cada mês) ficar ainda mais seco. Em EN forte, Set fica 17% abaixo da normal. O pasto já degradado de ago não se recupera a tempo.</p>
+          <p style="margin-top:4px"><strong>A boa notícia:</strong> Nov e Dez são robustos em todos os cenários EN — a estação chuvosa chega. O problema é o estado do rebanho e do pasto <em>quando ela chegar</em>.</p>
+        </div>
+
+        <h3>Dados reais dos pluviômetros — 2025 (único ano disponível nas fazendas)</h3>
+        <table class="strat-table">
+          <thead><tr><th>Mês</th><th>Bela Nova<br>(+10%)</th><th>Imbira<br>(média)</th><th>Bom Jardim<br>(−10%)</th><th>Normal regional<br>(histórica)</th><th>2025 vs normal</th></tr></thead>
+          <tbody>
+            <tr><td>Jan</td><td class="mono">202</td><td class="mono">216</td><td class="mono">175</td><td class="mono">79</td><td class="td-ok">Muito acima +150%</td></tr>
+            <tr><td>Fev</td><td class="mono">135</td><td class="mono">145</td><td class="mono">60</td><td class="mono">73</td><td class="td-ok">Acima em BN/Imbira</td></tr>
+            <tr><td>Mar</td><td class="mono">67</td><td class="mono">37</td><td class="mono">35</td><td class="mono">103</td><td class="td-danger">Abaixo (-60% Imbira)</td></tr>
+            <tr><td>Abr</td><td class="mono">90</td><td class="mono">60</td><td class="mono">60</td><td class="mono">78</td><td style="color:var(--text3)">Normal</td></tr>
+            <tr><td>Mai</td><td class="mono">106</td><td class="mono">101</td><td class="mono">101</td><td class="mono">52</td><td class="td-ok">Acima (+95%)</td></tr>
+            <tr style="background:var(--warn-bg)"><td>Jun</td><td class="mono">32</td><td class="mono">30</td><td class="mono">30</td><td class="mono">44</td><td class="td-warn">Abaixo (−28%)</td></tr>
+            <tr style="background:var(--danger-bg)"><td>Jul</td><td class="mono">35</td><td class="mono">0</td><td class="mono">10</td><td class="mono">45</td><td class="td-danger">Imbira zerou</td></tr>
+            <tr style="background:var(--danger-bg)"><td>Ago</td><td class="mono">15</td><td class="mono">20</td><td class="mono">20</td><td class="mono">41</td><td class="td-danger">Abaixo (−50%)</td></tr>
+            <tr style="background:var(--warn-bg)"><td>Set</td><td class="mono">35</td><td class="mono">25</td><td class="mono">25</td><td class="mono">42</td><td class="td-warn">Abaixo (−37%)</td></tr>
+            <tr><td>Out</td><td class="mono">55</td><td class="mono">90</td><td class="mono">90</td><td class="mono">66</td><td style="color:var(--text3)">Normal/acima</td></tr>
+            <tr><td>Nov</td><td class="mono">80</td><td class="mono">62</td><td class="mono">85</td><td class="mono">127</td><td class="td-danger">Abaixo (−37% a −51%)</td></tr>
+            <tr><td>Dez</td><td class="mono">85</td><td class="mono">125</td><td class="mono">125</td><td class="mono">120</td><td style="color:var(--text3)">Normal/acima</td></tr>
+            <tr style="font-weight:600"><td>TOTAL</td><td class="mono td-ok">937</td><td class="mono td-ok">911</td><td class="mono">816</td><td class="mono">871</td><td style="color:var(--text3)">Ano normal (total)</td></tr>
+          </tbody>
+        </table>
+
+        <div class="alert-info" style="margin-top:10px">
+          <p><strong>Nota sobre 2025:</strong> Total anual normal, mas distribuição atípica — chuva muito concentrada em Jan–Fev e baixa em Nov. Isso é consistente com o padrão de distribuição irregular que caracteriza a região. A série de 50 anos mostra que o <strong>total anual engana</strong>: anos com 900 mm podem ser tão estressantes quanto anos com 750 mm se a distribuição for concentrada.</p>
+        </div>
+
+        <div class="source-row" style="margin-top:10px">
+          <span class="source-chip">Série hist. 50 anos Itaju (1975–2024)</span>
+          <span class="source-chip">Pluviômetros fazendas 2025</span>
+          <span class="source-chip">Mapa SEI/BA 2003</span>
+          <span class="source-chip">EN canônicos: 1982-83, 1997-98, 2015-16</span>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- VEREDICTO PANEL -->
+    <div class="panel-content" id="panel-veredicto" style="overflow-y:auto;padding:20px">
+
+      <!-- CABEÇALHO COM ANÁLOGO ATIVO -->
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:14px">
+        <div>
+          <h2 style="margin-bottom:4px">Veredicto — Análogo vs 2026/27</h2>
+          <p class="small">O modelo eleito abaixo é o evento histórico mais semelhante ao perfil atual do EN 26/27. Atualiza conforme o fenômeno evolui.</p>
+        </div>
+        <button id="btn-recalc-analogo" onclick="recalcularAnalogo(this)" style="font-size:11px;font-family:var(--font-sans);background:var(--accent);color:#fff;border:none;border-radius:var(--r);padding:7px 14px;cursor:pointer;white-space:nowrap;flex-shrink:0">
+          🔄 Recalcular análogo
+        </button>
+      </div>
+
+      <!-- BANNER DO ANÁLOGO ELEITO -->
+      <div id="analogo-banner" style="background:var(--info-bg);border:1.5px solid #90b8d8;border-radius:var(--r2);padding:12px 16px;margin-bottom:14px">
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+          <div>
+            <div style="font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:3px">Análogo eleito</div>
+            <div id="analogo-titulo" style="font-size:18px;font-weight:600;color:var(--info)">El Niño 2015/16</div>
+            <div id="analogo-score" style="font-size:11px;color:var(--text3);margin-top:2px">Similaridade: <strong>Alta</strong> · Pico +2,8°C · Pacífico leste · Pós-La Niña</div>
+          </div>
+          <div id="analogo-deficit" style="text-align:right">
+            <div style="font-size:10px;color:var(--text3)">Déficit histórico SW Bahia</div>
+            <div style="font-size:22px;font-weight:600;color:var(--warn)">−50%</div>
+            <div style="font-size:10px;color:var(--text3)">set–jan do evento</div>
+          </div>
+        </div>
+        <div id="analogo-justificativa" style="font-size:11.5px;color:var(--text2);margin-top:10px;line-height:1.6;border-top:0.5px solid #90b8d8;padding-top:8px">
+          Escolhido com base no perfil atual: pós-La Niña, sinal subsuperficial forte, Atlântico Tropical acima da média, WWB intensos em abr/26 e projeção ECMWF de pico em out–dez/26. O sinal subsuperficial em abr/26 supera o de abr/15, tornando 2015/16 um análogo conservador — o cenário de teto aponta para 1997/98.
+        </div>
+      </div>
+
+      <!-- TABELA COMPARATIVA DINÂMICA -->
+      <table class="strat-table" id="tabela-comparativa" style="table-layout:fixed;width:100%">
+        <thead>
+          <tr>
+            <th style="width:44%;text-align:left">Critério</th>
+            <th id="th-analogo" style="width:28%;text-align:center;color:#1a4a7a">2015/16 (real)</th>
+            <th style="width:28%;text-align:center;color:#7a5c10">2026/27 (projeção)</th>
+          </tr>
+        </thead>
+        <tbody id="tbody-comparativo">
+          <tr><td>Pico Niño 3.4</td><td id="cmp-pico-ref" style="text-align:center;color:#1a4a7a;font-weight:500">+2,8°C</td><td style="text-align:center;color:#7a5c10;font-weight:500">+1,5 a 3,2°C</td></tr>
+          <tr><td>Mês do pico</td><td id="cmp-mes-ref" style="text-align:center;color:#1a4a7a;font-weight:500">Nov/15</td><td style="text-align:center;color:#7a5c10;font-weight:500">Out–Dez/26</td></tr>
+          <tr><td>Atlântico Tropical</td><td id="cmp-atl-ref" style="text-align:center;color:#1a4a7a;font-weight:500">Muito quente</td><td style="text-align:center;color:#7a5c10;font-weight:500">Muito quente</td></tr>
+          <tr><td>Sinal subsuperficial</td><td id="cmp-sub-ref" style="text-align:center;color:#1a4a7a;font-weight:500">Forte</td><td style="text-align:center;color:#9e2020;font-weight:500">Mais forte *</td></tr>
+          <tr><td>Origem pós-La Niña</td><td id="cmp-nina-ref" style="text-align:center;color:#1a4a7a;font-weight:500">Sim</td><td style="text-align:center;color:#7a5c10;font-weight:500">Sim</td></tr>
+          <tr><td>Temperatura base global</td><td id="cmp-base-ref" style="text-align:center;color:#1a4a7a;font-weight:500">+1,01°C</td><td style="text-align:center;color:#9e2020;font-weight:500">+1,5°C (mais alta)</td></tr>
+          <tr><td>Rajadas de vento oeste (WWB)</td><td id="cmp-wwb-ref" style="text-align:center;color:#1a4a7a;font-weight:500">Presentes</td><td style="text-align:center;color:#9e2020;font-weight:500">Fortes (abr/26)</td></tr>
+          <tr><td>Déficit chuva SW Bahia</td><td id="cmp-deficit-ref" style="text-align:center;color:#1a4a7a;font-weight:500">−50%</td><td style="text-align:center;color:#7a5c10;font-weight:500">−40 a −55%</td></tr>
+          <tr><td>Localização anomalia Pacífico</td><td id="cmp-loc-ref" style="text-align:center;color:#1a4a7a;font-weight:500">Leste</td><td style="text-align:center;color:#1a5c8a;font-weight:500">A definir *</td></tr>
+        </tbody>
+      </table>
+      <p class="small" style="margin-top:6px">* Sinal ECMWF abr/26 mais forte que o mesmo período do análogo eleito. Déficit estimado baseado em análogos históricos para SW Bahia.</p>
+
+      <!-- VEREDICTO TEXTUAL -->
+      <div id="veredicto-texto" class="alert-warn" style="margin-top:14px">
+        <p><strong>Veredicto:</strong> A comparação com 2015/16 é válida e provavelmente conservadora. O 2026/27 apresenta precursores iguais ou mais fortes em sinal subsuperficial e temperatura base global. O 2015/16 deve ser tratado como <strong>cenário central de planejamento — não como limite superior</strong>. O teto possível (1 em 4, NOAA) aproxima-se do padrão 1997/98, com déficit hídrico de até −60% no SW da Bahia.</p>
+        <p style="margin-top:6px;font-size:11.5px;color:var(--text2)"><strong>Nota ECMWF (Stockdale, abr/26):</strong> O análogo oficial do ECMWF é 2023/24 com sinal mais forte — mais conservador que 2015/16. A "spring predictability barrier" (mar–mai) está sendo superada agora; confiança dos modelos aumenta a partir de mai/jun/26. O risco de reversão (análogo 2017) existe, mas o sinal subsuperficial de 2026 é descrito como "mais coerente e mais difícil de desviar".</p>
+      </div>
+
+      <!-- EMBASAMENTO -->
+      <h3 style="margin-top:16px">Embasamento — modelos e bases históricas</h3>
+      <p class="small" style="margin-bottom:10px">Clique em <strong>Atualizar análise</strong> para gerar texto expandido e atualizado via IA.</p>
+
+      <div class="embasamento-grid">
+        <div class="emb-card info">
+          <div class="emb-header"><div><div class="emb-label">NOAA CPC — ENSO Probabilities</div><div class="emb-val danger">EN 92% JJA · 98% OND · 98% NDJ</div></div><span class="emb-tag tag-model">Operacional</span></div>
+          <div class="emb-body" id="emb-noaa">O NOAA CPC emitiu em maio/2026 a atualização mais recente das probabilidades ENSO. El Niño tornou-se praticamente certo para o segundo semestre: 92% em JJA, atingindo 98% de ASO a NDJ — probabilidade que se mantém em 96% até DJF 26/27. A probabilidade de La Niña é zero em todos os trimestres até DJF. Esses números representam uma escalada expressiva em relação à edição de abril/26 (61% JJA), refletindo o forte sinal subsuperficial e o acoplamento atmosférico agora em curso. Fonte: <a href="https://cpc.ncep.noaa.gov/products/analysis_monitoring/enso/roni/probabilities/" target="_blank" style="color:var(--info)">NOAA CPC ENSO Probabilities</a></div>
+          <div class="emb-footer"><span class="source-chip">mai/2026 · NOAA CPC</span><button class="emb-btn" onclick="atualizarEmbasamento('noaa','NOAA CPC ENSO probabilities site:cpc.ncep.noaa.gov/products/analysis_monitoring/enso/roni/probabilities','emb-noaa',this)">↺ Atualizar análise</button></div>
+        </div>
+        <div class="emb-card info">
+          <div class="emb-header"><div><div class="emb-label">IRI Columbia — ENSO Plume</div><div class="emb-val info">Multi-model · Dinâmico + Estatístico</div></div><span class="emb-tag tag-model">Ensemble</span></div>
+          <div class="emb-body" id="emb-iri">O IRI Columbia combina modelos dinâmicos e estatísticos com ponderação igual, publicando atualização no dia 19 de cada mês. Os dados dinâmicos tendem a ser mais otimistas que os estatísticos — em fevereiro/26, a média dinâmica para OND/26 era +0,83°C vs +0,72°C da média geral. O IRI é relevante por oferecer o maior conjunto de modelos (23+) e por fornecer a tabela de probabilidades por trimestre separada da análise humana do CPC. Clique em "Atualizar análise" para buscar os dados mais recentes. Fonte: <a href="https://iri.columbia.edu/our-expertise/climate/forecasts/enso/current/" target="_blank" style="color:var(--info)">IRI ENSO Current Forecast</a></div>
+          <div class="emb-footer"><span class="source-chip">Atualizar para dados recentes</span><button class="emb-btn" onclick="atualizarEmbasamento('iri','IRI Columbia ENSO forecast plume probabilities site:iri.columbia.edu/our-expertise/climate/forecasts/enso/current','emb-iri',this)">↺ Atualizar análise</button></div>
+        </div>
+        <div class="emb-card info">
+          <div class="emb-header"><div><div class="emb-label">ECMWF — Seasonal Forecast (SEAS5 / C3S)</div><div class="emb-val info">Niño 3.4 set/26: +1,7 a +3,3°C · C3S: +0,2 a +3,3°C</div></div><span class="emb-tag tag-model">Ensemble</span></div>
+          <div class="emb-body" id="emb-ecmwf">O ECMWF SEAS5, em sua contribuição ao C3S de abril/2026, projeta anomalia Niño 3.4 para setembro entre +1,7°C e +3,3°C por membro individual. O ensemble C3S completo (8 sistemas) abrange +0,2°C a +3,3°C — forte consenso acima de +1,0°C, com dois sistemas ainda admitindo abaixo de +0,5°C. O sinal subsuperficial de março/2026 é descrito pelo ECMWF como mais coerente e intenso que março/2023 e muito mais forte que março/2017 (o pior forecast de março em 33 anos do SEAS5). O análogo oficial ECMWF para 2026 é 2023/24 com sinal mais forte — conservador em relação ao análogo 2015/16 usado como referência central aqui. Fontes: <a href="https://climate.copernicus.eu/seasonal-forecasts" target="_blank" style="color:var(--info)">C3S Seasonal Forecasts</a> · <a href="https://charts.ecmwf.int/" target="_blank" style="color:var(--info)">ECMWF Charts</a></div>
+          <div class="emb-footer"><span class="source-chip">abr/2026 · ECMWF Science Blog</span><button class="emb-btn" onclick="atualizarEmbasamento('ecmwf','ECMWF SEAS5 seasonal forecast site:climate.copernicus.eu OR site:charts.ecmwf.int ENSO Nino 3.4','emb-ecmwf',this)">↺ Atualizar análise</button></div>
+        </div>
+        <div class="emb-card warn">
+          <div class="emb-header"><div><div class="emb-label">INMET — Nota técnica EN 2026</div><div class="emb-val warn">Estiagem NE confirmada</div></div><span class="emb-tag tag-inst">Institucional BR</span></div>
+          <div class="emb-body" id="emb-inmet">O INMET confirma em nota técnica de março/2026 a tendência de estiagem no Norte e Nordeste caso o EN forte se confirme no segundo semestre. A ressalva principal é que impactos regionais não escalam linearmente com intensidade. Para a pecuária em Itaju do Colônia, a irregularidade das chuvas é mais prejudicial do que a redução total, pois impede a recuperação do pasto entre episódios.</div>
+          <div class="emb-footer"><span class="source-chip">mar/2026</span><button class="emb-btn" onclick="atualizarEmbasamento('inmet','INMET nota técnica El Niño 2026 impacto nordeste bahia','emb-inmet',this)">↺ Atualizar análise</button></div>
+        </div>
+        <div class="emb-card danger">
+          <div class="emb-header"><div><div class="emb-label">NOAA CPC — Intensidade do EN</div><div class="emb-val danger">OND: 33% Muito Forte · 32% Forte · 65% ≥1,5°C</div></div><span class="emb-tag tag-model">Strengths</span></div>
+          <div class="emb-body" id="emb-strengths">A tabela de intensidades do NOAA CPC (mai/26) é o dado mais relevante para calibrar o planejamento pecuário. Para OND/26 — janela de pico e crítica para o pasto em Itaju — a distribuição é: 9% EN fraco (<1,0°C), 24% moderado (1,0–1,5°C), 32% forte (1,5–2,0°C) e 33% muito forte (≥2,0°C). Ou seja, 65% de chance de EN forte ou muito forte no período mais crítico. Para NDJ/26, a probabilidade de muito forte sobe para 37%. Em perspectiva histórica: EN muito forte (≥2,0°C) produziu déficits de −55% a −60% no SW da Bahia (1997/98 e 1982/83). Fonte: <a href="https://cpc.ncep.noaa.gov/products/analysis_monitoring/enso/roni/strengths/" target="_blank" style="color:var(--danger)">NOAA CPC ENSO Strength Probabilities</a></div>
+          <div class="emb-footer"><span class="source-chip">mai/2026 · NOAA CPC Strengths</span><button class="emb-btn" onclick="atualizarEmbasamento('strengths','NOAA CPC ENSO strength probabilities intensity site:cpc.ncep.noaa.gov/products/analysis_monitoring/enso/roni/strengths','emb-strengths',this)">↺ Atualizar análise</button></div>
+        </div>
+        <div class="emb-card warn">
+          <div class="emb-header"><div><div class="emb-label">IOD — Indian Ocean Dipole (IRI/NMME)</div><div class="emb-val warn">Positivo 56% em ago/26 · Amplificador EN no NE</div></div><span class="emb-tag tag-model">Oceano Índico</span></div>
+          <div class="emb-body" id="emb-iod">O Dipolo do Oceano Índico (IOD) é um fator amplificador dos impactos do El Niño no Nordeste brasileiro que não estava contemplado nas análises anteriores. Segundo previsão IRI/NMME de fevereiro/26, o IOD permanece neutro até julho, tornando-se positivo (DMI > +0,4°C) com 56% de probabilidade em agosto/26. IOD positivo + EN = combinação que historicamente produz déficits pluviométricos mais severos no NE e SW da Bahia, pois ambos reduzem a convergência de umidade do Atlântico para o continente. Em 2015/16, o IOD foi positivo de junho a outubro/15, coincidindo com o pico do EN e o período de maior déficit no SW da Bahia. Fonte: <a href="https://iri.columbia.edu/our-expertise/climate/forecasts/enso/current/?enso_tab=enso-iod" target="_blank" style="color:var(--warn)">IRI IOD Forecast</a></div>
+          <div class="emb-footer"><span class="source-chip">fev/2026 · IRI/NMME</span><button class="emb-btn" onclick="atualizarEmbasamento('iod','Indian Ocean Dipole IOD forecast 2026 IRI NMME positive impact northeast Brazil','emb-iod',this)">↺ Atualizar análise</button></div>
+        </div>
+        <div class="emb-card warn">
+          <div class="emb-header"><div><div class="emb-label">CEMADEN — Referência EN 2015/16</div><div class="emb-val warn">Déficit −50% SW Bahia</div></div><span class="emb-tag tag-hist">Histórico</span></div>
+          <div class="emb-body" id="emb-cemaden">O CEMADEN documentou os impactos regionais do EN 2015/16 em detalhe. Para o SW da Bahia o déficit pluviométrico atingiu ~50% na janela set/15–jan/16. O evento causou ainda 37 mil km² de queimadas na Amazônia e falha severa na safra do Matopiba. Este é o benchmark histórico que ancora a projeção de −40 a −55% para 2026/27 no cenário central.</div>
+          <div class="emb-footer"><span class="source-chip">evento 2015/16</span><button class="emb-btn" onclick="atualizarEmbasamento('cemaden','CEMADEN — EN 2015/16','emb-cemaden',this)">↺ Atualizar análise</button></div>
+        </div>
+        <div class="emb-card ok">
+          <div class="emb-header"><div><div class="emb-label">Série ENSO 1950–2024 (NOAA NCEI)</div><div class="emb-val ok">5 super eventos em 76 anos</div></div><span class="emb-tag tag-hist">Série histórica</span></div>
+          <div class="emb-body" id="emb-ncei">A série histórica de Niño 3.4 do NOAA NCEI cobre 76 anos e registra apenas cinco eventos com pico acima de +2,0°C: 1972/73 (+2,0°C), 1982/83 (+2,2°C), 1997/98 (+2,8°C), 2015/16 (+2,8°C) e 2023/24 (+1,9°C) — frequência de ~1 a cada 12–15 anos. Todos impactaram o SW da Bahia com déficit significativo.</div>
+          <div class="emb-footer"><span class="source-chip">série 1950–2024</span><button class="emb-btn" onclick="atualizarEmbasamento('ncei','Série ENSO NOAA NCEI 1950–2024','emb-ncei',this)">↺ Atualizar análise</button></div>
+        </div>
+        <div class="emb-card info">
+          <div class="emb-header"><div><div class="emb-label">Yale Climate Connections</div><div class="emb-val info">WWB abr/26 — sinal forte</div></div><span class="emb-tag tag-inst">Análise independente</span></div>
+          <div class="emb-body" id="emb-yale">A análise do Yale Climate Connections de abril/2026 destaca as rajadas de vento oeste (WWB) como indicador mecânico mais robusto para EN forte. O episódio de abril/2026 é descrito como o mais intenso observado no mesmo período desde os precursores de 1997/98, contextualizando por que o sinal subsuperficial atual supera o de 2015.</div>
+          <div class="emb-footer"><span class="source-chip">abr/2026</span><button class="emb-btn" onclick="atualizarEmbasamento('yale','Yale Climate Connections — WWB 2026','emb-yale',this)">↺ Atualizar análise</button></div>
+        </div>
+        <div class="emb-card danger">
+          <div class="emb-header"><div><div class="emb-label">James Hansen — Columbia Univ.</div><div class="emb-val danger">"Super-duper El Niño"</div></div><span class="emb-tag tag-inst">Análise científica</span></div>
+          <div class="emb-body" id="emb-hansen">O climatologista James Hansen cunhou o termo "super-duper El Niño" para o setup de 2026. A temperatura base global está ~0,5°C acima do nível de 2015, e cada décimo de grau amplifica os extremos associados ao ENSO. Um EN de mesma intensidade em Niño 3.4 produz impactos proporcionalmente maiores sobre uma linha de base mais quente — 2015/16 deve ser tratado como piso, não como teto.</div>
+          <div class="emb-footer"><span class="source-chip">abr/2026</span><button class="emb-btn" onclick="atualizarEmbasamento('hansen','James Hansen — Columbia Univ. análise EN 2026','emb-hansen',this)">↺ Atualizar análise</button></div>
+        </div>
+        <div class="emb-card warn">
+          <div class="emb-header"><div><div class="emb-label">ECMWF Science Blog — Tim Stockdale</div><div class="emb-val warn">Análogo oficial: 2023/24 · barreira de previsibilidade</div></div><span class="emb-tag tag-model">Análise ECMWF</span></div>
+          <div class="emb-body" id="emb-stockdale">Artigo publicado em 10/abril/2026 pelo cientista-sênior Tim Stockdale (ECMWF) contextualiza o nível de confiança atual. O análogo oficial do ECMWF para 2026 é março/abril 2023, com sinal de 2026 descrito como mais forte — conservador em relação ao análogo 2015/16 usado como referência central. A "spring predictability barrier" (mar–mai) significa que a confiança dos modelos aumenta substancialmente a partir de maio/junho — exatamente agora. O artigo cita 2017 como contraponto: o pior forecast de março em 33 anos do SEAS5, quando EN previsto virou La Niña; porém destaca que o sinal subsuperficial de 2026 é "mais coerente e mais difícil de desviar" do que 2017. Leitura completa: <a href="https://www.ecmwf.int/en/about/media-centre/science-blog/2026/el-nino-2026" target="_blank" style="color:var(--info)">ecmwf.int/el-nino-2026</a></div>
+          <div class="emb-footer"><span class="source-chip">10/abr/2026 · ECMWF</span><button class="emb-btn" onclick="atualizarEmbasamento('stockdale','ECMWF Science Blog El Nino 2026 Tim Stockdale site:ecmwf.int','emb-stockdale',this)">↺ Atualizar análise</button></div>
+        </div>
+      </div>
+
+      <div class="source-row" style="margin-top:12px">
+        <span class="source-chip">NOAA CPC mai/26</span><span class="source-chip">NOAA Strengths mai/26</span><span class="source-chip">IRI Columbia</span><span class="source-chip">ECMWF SEAS5 abr/26</span><span class="source-chip">C3S Multi-system</span><span class="source-chip">IOD IRI/NMME fev/26</span><span class="source-chip">INMET mar/26</span><span class="source-chip">CEMADEN NT 15/16</span><span class="source-chip">NOAA NCEI 1950–2024</span><span class="source-chip">Stockdale — ECMWF Blog abr/26</span>
+      </div>
+    </div>
+
+    <!-- ANÁLISE CRÍTICA PANEL -->
+    <div class="panel-content" id="panel-critica" style="overflow-y:auto;padding:20px">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px;flex-wrap:wrap;gap:10px">
+        <div>
+          <h2 style="margin-bottom:4px">⚖️ Análise Crítica dos Modelos</h2>
+          <p class="small">Divergência entre modelos · Acurácia histórica · Range de intensidade · Impacto em Itaju do Colônia</p>
+        </div>
+        <button id="btn-critica" onclick="gerarAnaliseCritica(this)"
+          style="background:var(--accent);color:#fff;border:none;border-radius:var(--r);padding:9px 18px;cursor:pointer;font-size:12px;font-family:var(--font-sans);white-space:nowrap">
+          🔍 Gerar análise crítica
+        </button>
+      </div>
+
+      <!-- Estado inicial -->
+      <div id="critica-placeholder" style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r2);padding:20px;text-align:center;color:var(--text3)">
+        <p style="font-size:13px">Clique em <strong style="color:var(--text2)">Gerar análise crítica</strong> para buscar os dados mais recentes de ECMWF, NOAA e IRI e gerar uma análise comparativa com foco em Itaju do Colônia.</p>
+        <p style="font-size:11px;margin-top:8px">A análise inclui: divergência entre modelos · range de intensidade por modelo · histórico de acurácia · análogos comparados · impacto projetado em chuvas e pastagem.</p>
+      </div>
+
+      <!-- Container da análise gerada -->
+      <div id="critica-container" style="display:none">
+
+        <!-- Bloco 1: Status atual e consenso -->
+        <div class="emb-card info" style="margin-bottom:12px" id="critica-consenso">
+          <div class="emb-header"><div><div class="emb-label">Consenso atual dos modelos</div><div class="emb-val info" id="critica-consenso-titulo">—</div></div><span class="emb-tag tag-model">Consenso</span></div>
+          <div class="emb-body" id="critica-consenso-texto" style="white-space:pre-wrap"></div>
+          <div class="emb-footer"><span class="source-chip" id="critica-data">—</span></div>
+        </div>
+
+        <!-- Bloco 2: Tabela de divergência -->
+        <h3 style="margin:14px 0 8px">Range de intensidade Niño 3.4 por modelo (OND/26)</h3>
+        <div id="critica-tabela-div">
+          <table class="strat-table" id="critica-tabela">
+            <thead>
+              <tr>
+                <th>Modelo</th>
+                <th>Tipo</th>
+                <th>Acurácia histórica</th>
+                <th>Niño 3.4 OND/26</th>
+                <th>Range ensemble</th>
+                <th>Viés</th>
+              </tr>
+            </thead>
+            <tbody id="critica-tabela-body">
+              <tr><td colspan="6" style="text-align:center;color:var(--text3);padding:12px">Aguardando geração da análise...</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Bloco 3: Acurácia histórica comparada -->
+        <h3 style="margin:14px 0 8px">Acurácia histórica: quem acertou os grandes eventos</h3>
+        <div class="emb-card ok" style="margin-bottom:12px">
+          <div class="emb-body" id="critica-acuracia" style="white-space:pre-wrap"></div>
+        </div>
+
+        <!-- Bloco 4: Impacto projetado em Itaju -->
+        <h3 style="margin:14px 0 8px">Projeção de chuvas em Itaju do Colônia — cenários por intensidade</h3>
+        <div id="critica-impacto-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin-bottom:14px">
+          <div class="data-card warn" id="critica-cen-fraco">
+            <div class="data-card-label">EN Moderado (1,0–1,5°C)</div>
+            <div class="data-card-val warn" id="critica-val-fraco">—</div>
+            <div class="data-card-sub" id="critica-sub-fraco">set–jan · análogo 2023/24</div>
+          </div>
+          <div class="data-card danger" id="critica-cen-forte">
+            <div class="data-card-label">EN Forte (1,5–2,0°C)</div>
+            <div class="data-card-val danger" id="critica-val-forte">—</div>
+            <div class="data-card-sub" id="critica-sub-forte">set–jan · análogo 2015/16</div>
+          </div>
+          <div class="data-card danger" id="critica-cen-super">
+            <div class="data-card-label">EN Muito Forte (≥2,0°C)</div>
+            <div class="data-card-val danger" id="critica-val-super" style="color:#8e0000">—</div>
+            <div class="data-card-sub" id="critica-sub-super">set–jan · análogo 1997/98</div>
+          </div>
+        </div>
+
+        <!-- Bloco 5: Crítica e incertezas -->
+        <h3 style="margin:14px 0 8px">Crítica: o que os modelos podem estar errando</h3>
+        <div class="alert-warn" id="critica-incertezas" style="font-size:12.5px;line-height:1.7;white-space:pre-wrap"></div>
+
+        <!-- Bloco 6: Recomendação operacional -->
+        <h3 style="margin:14px 0 8px">Recomendação operacional para pecuária</h3>
+        <div style="background:var(--danger-bg);border:1px solid #e8a0a0;border-radius:var(--r2);padding:12px 14px" id="critica-recomendacao">
+          <p style="font-size:12.5px;line-height:1.7;white-space:pre-wrap" id="critica-recomendacao-texto"></p>
+        </div>
+
+      </div><!-- end critica-container -->
+    </div><!-- end panel-critica -->
+</div><!-- end main -->
+</div><!-- end app -->
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+// ---- CLOCK ----
+function updateClock() {
+  const now = new Date();
+  document.getElementById('clock').textContent =
+    now.toLocaleTimeString('pt-BR', {hour:'2-digit',minute:'2-digit',second:'2-digit'});
+}
+setInterval(updateClock, 1000); updateClock();
+
+// ---- PANEL SWITCHING ----
+function setPanel(name) {
+  document.querySelectorAll('.panel-item').forEach(el => {
+    el.classList.toggle('active', el.dataset.panel === name);
+  });
+  document.querySelectorAll('.panel-content').forEach(el => {
+    el.classList.remove('active');
+    el.style.display = 'none';
+  });
+  const target = document.getElementById('panel-' + name);
+  if (target) { target.style.display = 'flex'; target.classList.add('active'); }
+  if (name !== 'chat') initCharts(name);
+}
+
+// ---- CHARTS ----
+let chartsInited = {};
+function initCharts(panel) {
+  if (chartsInited[panel]) return;
+  chartsInited[panel] = true;
+  const months = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+  const months2 = ['Mai','Jun','Jul','Ago','Set','Out','Nov','Dez','Jan','Fev','Mar','Abr'];
+
+  if (panel === 'status') {
+    const ctx = document.getElementById('ninoChart');
+    if (!ctx) return;
+    new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: ['Jan/25','Abr/25','Jul/25','Out/25','Jan/26','Abr/26','Jul/26*','Out/26*','Jan/27*','Abr/27*'],
+        datasets: [
+          { label: 'Nino 3.4 observado', data: [-1.0,-1.1,-1.3,-1.1,-0.5,0.5,null,null,null,null], borderColor: '#378ADD', backgroundColor: 'rgba(55,138,221,.08)', tension: .4, borderWidth: 2, pointRadius: 3 },
+          { label: 'Previsão IRI central', data: [null,null,null,null,-0.5,0.5,1.0,1.5,1.8,1.0], borderColor: '#b84a1e', borderDash: [5,3], backgroundColor: 'rgba(184,74,30,.06)', tension: .4, borderWidth: 2, pointRadius: 3 },
+          { label: 'EN 23/24 (análogo)', data: [-0.2,0.2,0.8,1.5,1.9,1.4,0.8,0.4,0.1,-0.2], borderColor: '#888', borderDash: [2,4], tension: .4, borderWidth: 1.5, pointRadius: 0 },
+        ]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { labels: { font:{size:11}, boxWidth:12 } } },
+        scales: {
+          x: { ticks:{font:{size:10}} },
+          y: { title:{display:true,text:'°C anomalia',font:{size:10}}, ticks:{font:{size:10}}, grid:{color:'rgba(0,0,0,.06)'} }
+        }
+      }
+    });
+  }
+
+  if (panel === 'compare') {
+    const ctx = document.getElementById('analogChart');
+    if (!ctx) return;
+    new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: ['1982/83','1997/98','2015/16','2023/24','2026/27 est.'],
+        datasets: [{
+          label: 'Anomalia chuva out–jan (%)',
+          data: [-55,-60,-50,-45,-48],
+          backgroundColor: ['#c0541a','#a8360e','#b84a1e','#8e2205','rgba(184,74,30,.4)'],
+          borderColor: ['#c0541a','#a8360e','#b84a1e','#8e2205','#b84a1e'],
+          borderWidth: [0,0,0,0,2],
+          borderDash: [5,3],
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          y: { min:-70, max:0, ticks:{font:{size:10}, callback:v=>v+'%'}, grid:{color:'rgba(0,0,0,.06)'} },
+          x: { ticks:{font:{size:11}} }
+        }
+      }
+    });
+  }
+
+  if (panel === 'itaju') {
+    const ctx = document.getElementById('itajuChart');
+    if (!ctx) return;
+    new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: months,
+        datasets: [
+          { label: 'Normal (média histórica)', data: [180,160,140,110,80,50,25,20,45,105,130,155], backgroundColor: 'rgba(55,138,221,.2)', borderColor: '#378ADD', borderWidth: 1.5 },
+          { label: 'EN forte estimado (26/27)', data: [130,140,130,100,65,45,20,15,22,52,75,95], backgroundColor: 'rgba(184,74,30,.25)', borderColor: '#b84a1e', borderWidth: 1.5 },
+        ]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { labels: { font:{size:11}, boxWidth:12 } } },
+        scales: {
+          y: { title:{display:true,text:'mm',font:{size:10}}, ticks:{font:{size:10}}, grid:{color:'rgba(0,0,0,.06)'} },
+          x: { ticks:{font:{size:10}} }
+        }
+      }
+    });
+  }
+}
+
+// ---- AGENT RESPONSES DATABASE ----
+const agentResponses = {
+  'status': {
+    trigger: ['status','atual','agora','hoje','nino 3.4','nino3.4','semana'],
+    render: () => `
+<span class="tag tag-src">NOAA CPC + IRI · abr/2026</span>
+<p><strong>Status ENSO em abril de 2026:</strong></p>
+<div class="data-grid">
+  <div class="data-card warn"><div class="data-card-label">Nino 3.4 semanal</div><div class="data-card-val warn">+0,5°C</div><div class="data-card-sub">Semana de 15/abr/26</div></div>
+  <div class="data-card warn"><div class="data-card-label">Condição atual</div><div class="data-card-val warn">Neutro→EN</div><div class="data-card-sub">Transição em curso</div></div>
+  <div class="data-card danger"><div class="data-card-label">Prob. OND 2026</div><div class="data-card-val danger">88–94%</div><div class="data-card-sub">El Niño confirmado</div></div>
+</div>
+<p style="margin-top:8px">O sistema transitou da La Niña (encerrada em fev/26) para neutralidade e caminha para El Niño. O ponto crítico é o enorme reservatório de calor subsuperficial no Pacífico (acima de 250–300m de profundidade), comparável ao que antecedeu o EN 23/24.</p>
+<p style="margin-top:6px"><strong>Vs EN 23/24:</strong> em abr/23 o Nino 3.4 estava em +0,7°C com acoplamento já iniciando. Em abr/26 o sinal subsuperficial é <em>mais forte</em> que em 2023 no mesmo período (fonte: ECMWF, abr/26), o que dá maior confiança na previsão de evento significativo.</p>
+<div class="source-row"><span class="source-chip">NOAA CPC abr/26</span><span class="source-chip">IRI Columbia abr/26</span><span class="source-chip">ECMWF Science Blog abr/26</span></div>`
+  },
+
+  'analogos': {
+    trigger: ['análogo','análogos','historico','histórico','parecido','similar','semelhante','passado'],
+    render: () => `
+<span class="tag tag-src">Análise histórica ENSO 1950–2025</span>
+<p><strong>El Niños históricos mais análogos ao 26/27:</strong></p>
+<p style="margin-top:6px">Critério: subsuperfície quente após La Niña + Atlântico Tropical quente + pico previsto OND + intensidade moderada a forte.</p>
+<table class="comp-table" style="margin-top:8px">
+  <thead><tr><th>Evento</th><th>Nino 3.4 pico</th><th>Chuva SW Bahia</th><th>Similaridade</th></tr></thead>
+  <tbody>
+    <tr><td>2023/24</td><td class="val-danger">+1,9°C</td><td class="val-danger">−45%</td><td class="val-danger">Muito alta</td></tr>
+    <tr><td>2015/16</td><td class="val-danger">+2,4°C</td><td class="val-danger">−50%</td><td class="val-danger">Alta</td></tr>
+    <tr><td>1997/98</td><td class="val-danger">+2,8°C</td><td class="val-danger">−60%</td><td class="val-warn">Moderada (muito forte)</td></tr>
+    <tr><td>1982/83</td><td class="val-danger">+2,2°C</td><td class="val-danger">−55%</td><td class="val-warn">Moderada</td></tr>
+  </tbody>
+</table>
+<p style="margin-top:8px">O <strong>EN 2023/24</strong> é o análogo mais próximo por combinar: (1) origem de La Niña, (2) Atlântico muito quente, (3) temperatura base global mais elevada. O 26/27 pode ser ligeiramente mais intenso por ter sinal subsuperficial mais forte que em 2023.</p>
+<p style="margin-top:6px">O <strong>EN 1997/98</strong> representa o cenário mais pessimista (25% de chance segundo NOAA de "super EN" em 26/27). No 97/98, Itabuna registrou déficit pluviométrico acima de 60% entre set/97 e jan/98.</p>
+<div class="source-row"><span class="source-chip">NOAA ONI historical</span><span class="source-chip">INMET série Itabuna</span><span class="source-chip">ECMWF apr/26</span></div>`
+  },
+
+  'chuva': {
+    trigger: ['chuva','chuv','precipita','pluvio','chove','seca','déficit','defici'],
+    render: () => `
+<span class="tag tag-warn">Previsão · incerteza alta além de 6 meses</span>
+<p><strong>Previsão de precipitação para Itaju do Colônia — mai/26 a abr/27:</strong></p>
+<div class="data-grid" style="margin-top:8px">
+  <div class="data-card ok"><div class="data-card-label">Mai–Jul/26</div><div class="data-card-val">−15 a −20%</div><div class="data-card-sub">Seca normal + EN fraco</div></div>
+  <div class="data-card danger"><div class="data-card-label">Set–Dez/26</div><div class="data-card-val danger">−45 a −60%</div><div class="data-card-sub">Período CRÍTICO</div></div>
+  <div class="data-card warn"><div class="data-card-label">Jan–Mar/27</div><div class="data-card-val warn">−15 a −30%</div><div class="data-card-sub">Normalização parcial</div></div>
+</div>
+<p style="margin-top:8px">O padrão esperado para o sudoeste da Bahia em EN forte é: chuvas de início de estação (set–out) com 50–60% de déficit, normalização gradual a partir de jan/27. O fator agravante local é que Itaju já tem déficit hídrico natural entre mai–set — o EN empurra o problema para dentro da estação chuvosa.</p>
+<p style="margin-top:6px"><strong>Baseado no caderno 23/24:</strong> chuvas chegaram somente em 04/jan/24 após 69 dias de seca severa iniciados em nov/23. Para 26/27 o acoplamento mais precoce pode antecipar este período crítico para out/26.</p>
+<div class="source-row"><span class="source-chip">NOAA seasonal outlook</span><span class="source-chip">Climatempo abr/26</span><span class="source-chip">INMET boletim</span><span class="source-chip">Caderno campo 23/24</span></div>`
+  },
+
+  'calendario': {
+    trigger: ['calendario','calendário','manejo','quando','decisao','decisão','ação','ação'],
+    render: () => `
+<span class="tag tag-ok">Baseado em EN 23/24 + previsão modelos</span>
+<p><strong>Calendário de manejo recomendado para EN 26/27:</strong></p>
+<table class="comp-table" style="margin-top:8px">
+  <thead><tr><th>Período</th><th>Ação prioritária</th><th>Urgência</th></tr></thead>
+  <tbody>
+    <tr><td><strong>Abr–Mai/26</strong></td><td>Verificar previsão ENSO mensalmente. Planejar silagem. Fazer reservas de caixa.</td><td class="val-ok">Alta</td></tr>
+    <tr><td><strong>Jun–Jul/26</strong></td><td>Ensilar milho/sorgo (200 kg MS/cab para 120 dias). Descartar vacas vazias e improdutivas. Checar aguadas.</td><td class="val-warn">Crítica</td></tr>
+    <tr><td><strong>Ago–Set/26</strong></td><td>Iniciar suplementação volumosa. Suspender monta natural. Monitorar peso semanal.</td><td class="val-danger">Máxima</td></tr>
+    <tr><td><strong>Out–Dez/26</strong></td><td>Gestão de crise: racionamento de pasto por piquetes, suplementação plena, reduzir lotação.</td><td class="val-danger">Emergência</td></tr>
+    <tr><td><strong>Jan–Fev/27</strong></td><td>Aguardar normalização das chuvas. IATF em lote selecionado e bem nutrido.</td><td class="val-warn">Planejada</td></tr>
+    <tr><td><strong>Mar–Abr/27</strong></td><td>Adubação/calcário para recuperação de pastagens. Avaliação financeira do ciclo.</td><td class="val-ok">Normal</td></tr>
+  </tbody>
+</table>
+<p style="margin-top:8px"><strong>Diferença chave vs 23/24:</strong> Em 23/24 o acoplamento foi tardio (dez/23). Em 26/27 pode ocorrer em out/26, portanto as ações de agosto já são de emergência, não preventivas.</p>
+<div class="source-row"><span class="source-chip">Caderno campo 23/24</span><span class="source-chip">IRI forecast abr/26</span></div>`
+  },
+
+  'atlantico': {
+    trigger: ['atlântico','atlantico','tsi','tsi','oceano','sst','temperatura mar'],
+    render: () => `
+<span class="tag tag-src">NOAA SST analysis · mar/26</span>
+<p><strong>Temperatura do Atlântico Tropical e impacto no nordeste da Bahia:</strong></p>
+<p style="margin-top:6px">O Atlântico Tropical Norte e Sul apresentam anomalias positivas de TSM em mar/26 — condição que é desfavorável para as chuvas no nordeste brasileiro, incluindo o sul da Bahia.</p>
+<div class="data-grid" style="margin-top:8px">
+  <div class="data-card warn"><div class="data-card-label">Atlântico Trop. Norte</div><div class="data-card-val warn">+Acima média</div><div class="data-card-sub">Inibe ZCIT ao sul</div></div>
+  <div class="data-card warn"><div class="data-card-label">Atlântico Trop. Sul</div><div class="data-card-val warn">+Acima média</div><div class="data-card-sub">Inibe ZCAS</div></div>
+  <div class="data-card danger"><div class="data-card-label">Efeito combinado EN+ATL</div><div class="data-card-val danger">Dupla inibição</div><div class="data-card-sub">Similar ao 23/24</div></div>
+</div>
+<p style="margin-top:8px">O mecanismo: El Niño no Pacífico inibe diretamente as chuvas no N/NE do Brasil. Quando o Atlântico Tropical também está quente, a ZCIT (Zona de Convergência Intertropical) se posiciona mais ao norte e a ZCAS (Zona de Convergência do Atlântico Sul) fica menos ativa — o que reduz as chuvas especialmente em set–dez na Bahia.</p>
+<p style="margin-top:6px">Este foi exatamente o padrão de 23/24, e o 26/27 apresenta configuração oceânica similar. Nota: temperatura global da superfície do mar em 2026 está ainda mais elevada do que em 2023 (aquecimento global cumulativo), o que pode amplificar o sinal.</p>
+<div class="source-row"><span class="source-chip">NOAA SST abr/26</span><span class="source-chip">ECMWF abr/26</span><span class="source-chip">INMET abr/26</span></div>`
+  },
+
+  'intensidade': {
+    trigger: ['intensidade','forte','fraco','moderado','super','categoria','força'],
+    render: () => `
+<span class="tag tag-warn">Incerteza elevada em previsões de intensidade</span>
+<p><strong>Intensidade esperada do El Niño 26/27:</strong></p>
+<div class="data-grid" style="margin-top:8px">
+  <div class="data-card ok"><div class="data-card-label">Fraco (&lt;1,0°C)</div><div class="data-card-val">~5%</div><div class="data-card-sub">Prob. cenário</div></div>
+  <div class="data-card warn"><div class="data-card-label">Moderado (1,0–1,5°C)</div><div class="data-card-val warn">~45%</div><div class="data-card-sub">Cenário base</div></div>
+  <div class="data-card danger"><div class="data-card-label">Forte–Muito forte (≥1,5°C)</div><div class="data-card-val danger">~50%</div><div class="data-card-sub">Cenário possível</div></div>
+</div>
+<p style="margin-top:8px">O NOAA aponta 1 em 3 chances de EN <strong>forte</strong> (Nino 3.4 ≥+1,5°C) em OND/26. A Climatempo avalia potencial de evento forte a muito forte, comparável ao 23/24. Existe 25% de probabilidade de "super El Niño" (NOAA) conforme o sinal subsuperficial continuar se desenvolvendo.</p>
+<p style="margin-top:6px"><strong>Ponto de atenção crítico:</strong> a temperatura base global dos oceanos em 2026 é ~0,2–0,3°C mais alta que em 2023. Isso significa que mesmo um EN "moderado" pelo índice Nino 3.4 pode ter impactos de temperatura e chuva equivalentes a um EN forte em décadas anteriores.</p>
+<p style="margin-top:6px"><strong>Para o planejamento da pecuária:</strong> planejar para o cenário de EN forte. Se vier moderado, haverá folga. O erro em subestimar é muito mais custoso que em superestimar.</p>
+<div class="source-row"><span class="source-chip">NOAA CPC abr/26</span><span class="source-chip">Climatempo abr/26</span><span class="source-chip">ECMWF abr/26</span></div>`
+  },
+
+  'default': {
+    render: (q) => `
+<span class="tag tag-src">Análise com base nos dados integrados</span>
+<p>Processando sua consulta sobre: <em>"${q.substring(0,80)}${q.length>80?'...':''}"</em></p>
+<p style="margin-top:8px">Com base nas fontes integradas (NOAA CPC, IRI Columbia, ECMWF, INMET e caderno de campo EN 23/24), posso oferecer os seguintes pontos relevantes para sua questão:</p>
+<ul style="margin-top:8px;margin-left:16px">
+  <li>O El Niño 26/27 está em formação com 88–94% de probabilidade para o trimestre OND/2026</li>
+  <li>O análogo mais próximo é o EN 2023/24, com potencial para se tornar mais intenso pelo sinal subsuperficial atual</li>
+  <li>O período crítico para Itaju do Colônia será set–dez/26, com déficit pluviométrico estimado de 40–60%</li>
+  <li>A janela de preparação ativa é agora: abr–jun/2026</li>
+</ul>
+<p style="margin-top:8px">Para análise mais específica, explore os painéis laterais ou reformule sua pergunta com mais detalhes sobre o aspecto que deseja aprofundar.</p>
+<div class="source-row"><span class="source-chip">NOAA CPC</span><span class="source-chip">IRI abr/26</span><span class="source-chip">ECMWF</span><span class="source-chip">INMET</span></div>`
+  }
+};
+
+// ---- DADOS ATUAIS (espelho dos botões de atualização) ----
+window.dadosAtuais = {
+  atualizadoEm: 'mai/2026',
+  nino34: 'Em formação — JJA 92% EN (NOAA CPC mai/26)',
+  condicao: 'El Niño confirmado em formação. NOAA CPC mai/26: 98% EN em ASO, SON, OND, NDJ',
+  subsuperficie: 'Mais coerente e forte que mar/2023 e mar/2017 (ECMWF ORAS5 abr/26)',
+  probNoaa: 'EN 92% JJA · 98% ASO · 98% OND · 98% NDJ · 96% DJF (NOAA CPC mai/26)',
+  probIri: 'Atualizar via botão — última leitura fev/26 estava 60% OND (defasada)',
+  ecmwf: 'C3S abr/26: +1,7 a +3,3°C set/26 (ECMWF SEAS5) · Análogo oficial: 2023/24 mais forte',
+  atlantico: 'Acima da média, desfavorável ao NE. IOD positivo 56% ago/26 (IRI/NMME) — amplificador adicional',
+  iod: 'IOD positivo 56% probabilidade em ago/26 (IRI/NMME fev/26) — historicamente amplifica déficit NE em 5–15 p.p.',
+  analogo: 'EN 2015/16 (Alta similaridade) · Análogo ECMWF: 2023/24 mais forte',
+  teto: 'EN 1997/98',
+  deficitProjetado: '−40 a −55% (moderado) · −55 a −60% (muito forte) · IOD pode amplificar +5–15 p.p.',
+  strengths_ond: 'OND: 9% fraco · 24% moderado · 32% forte · 33% muito forte (≥2,0°C) — 65% ≥forte',
+  justificativa: 'Pós-La Niña, sinal subsuperficial mais forte que 2023, Atlântico quente, WWB intensos. NOAA mai/26 eleva probabilidades a quase certeza para 2º semestre. IOD positivo previsto ago/26 amplifica impacto no NE.'
+};
+
+// ---- CHAT ENGINE ----
+let isLoading = false;
+
+function askQuestion(q) {
+  document.getElementById('user-input').value = q;
+  sendMessage();
+}
+
+function autoResize(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+}
+
+function addUserMessage(text) {
+  const msgs = document.getElementById('chat-messages');
+  const div = document.createElement('div');
+  div.className = 'msg user';
+  div.innerHTML = `<div class="msg-avatar user-av">VC</div><div class="msg-bubble">${escHtml(text)}</div>`;
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function addLoadingMsg() {
+  const msgs = document.getElementById('chat-messages');
+  const div = document.createElement('div');
+  div.className = 'msg'; div.id = 'loading-msg';
+  div.innerHTML = `<div class="msg-avatar agent">EN</div><div class="msg-bubble"><div class="loading"><div class="loading-dots"><span></span><span></span><span></span></div><span class="loading-text">Consultando fontes ENSO...</span></div></div>`;
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function removeLoadingMsg() {
+  const el = document.getElementById('loading-msg');
+  if (el) el.remove();
+}
+
+function addAgentMessage(html) {
+  const msgs = document.getElementById('chat-messages');
+  const div = document.createElement('div');
+  div.className = 'msg';
+  div.innerHTML = `<div class="msg-avatar agent">EN</div><div class="msg-bubble">${html}</div>`;
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function matchResponse(q) {
+  const ql = q.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+  for (const [key, val] of Object.entries(agentResponses)) {
+    if (key === 'default') continue;
+    if (val.trigger && val.trigger.some(t => ql.includes(t.normalize('NFD').replace(/[\u0300-\u036f]/g,'')))) {
+      return val.render(q);
+    }
+  }
+  return agentResponses.default.render(q);
+}
+
+async function sendMessage() {
+  if (isLoading) return;
+  const input = document.getElementById('user-input');
+  const q = input.value.trim();
+  if (!q) return;
+
+  // Switch to chat panel if not there
+  setPanel('chat');
+  document.querySelectorAll('.panel-item').forEach(el => {
+    el.classList.toggle('active', el.dataset.panel === 'chat');
+  });
+
+  input.value = ''; input.style.height = 'auto';
+  addUserMessage(q);
+
+  isLoading = true;
+  document.getElementById('send-btn').disabled = true;
+  addLoadingMsg();
+
+  // Simulate API latency with Claude AI call
+  const loadingTexts = ['Consultando NOAA/ENSO...', 'Analisando análogos históricos...', 'Cruzando dados de pluviosidade...', 'Gerando previsão regional...'];
+  let li = 0;
+  const lt = setInterval(() => {
+    const el = document.querySelector('#loading-msg .loading-text');
+    if (el) el.textContent = loadingTexts[li++ % loadingTexts.length];
+  }, 700);
+
+  try {
+    const d = window.dadosAtuais;
+    const systemPrompt = `Você é o Agente Monitor El Niño 26/27, especializado em ENSO e seus impactos na pecuária de corte na região de Itaju do Colônia, BA (microclima Am, bacia hidrográfica do Rio Colônia).
+
+CONTEXTO DA PROPRIEDADE:
+- 1.350 ha de pastagens, 2.658 cabeças, peso médio 360 kg
+- Referência histórica EN 23/24: anomalia −100mm out-nov/23, chuvas voltaram 04/jan/24 após 69 dias críticos, GPD zerou/negativo, Bela Nora situação crítica em dez/23
+- Lição-chave 23/24: reserva de caixa fundamental (despesas correntes + emergenciais + menor receita simultâneas)
+
+DADOS ENSO MAIS RECENTES (${d.atualizadoEm}):
+- Niño 3.4: ${d.nino34}
+- Condição: ${d.condicao}
+- Subsuperfície Pacífico: ${d.subsuperficie}
+- NOAA CPC: ${d.probNoaa}
+- IRI Columbia: ${d.probIri}
+- ECMWF: ${d.ecmwf}
+- Atlântico Tropical: ${d.atlantico}
+- IOD (Índico): ${d.iod || 'Neutro até jul/26, positivo 56% ago/26 — amplificador adicional'}
+- Intensidade NOAA (Strengths): ${d.strengths_ond || 'OND: 33% muito forte ≥2,0°C · 32% forte · 65% ≥forte'}
+- Análogo eleito: ${d.analogo} | Teto: ${d.teto}
+- Déficit projetado SW Bahia (set–jan): ${d.deficitProjetado}
+- Justificativa: ${d.justificativa}
+
+Responda de forma técnica e prática, sempre relacionando com o impacto real na propriedade. Use dados quantitativos. Responda em português brasileiro. Seja conciso (máx 300 palavras). Não use markdown pesado, use linguagem direta.`;
+
+    const apiKey = window._apiKey || '';
+    const reqHeaders = { 'Content-Type': 'application/json' };
+    if (apiKey) {
+      reqHeaders['x-api-key'] = apiKey;
+      reqHeaders['anthropic-version'] = '2023-06-01';
+      reqHeaders['anthropic-dangerous-direct-browser-access'] = 'true';
+    }
+
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: reqHeaders,
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 1000,
+        system: systemPrompt,
+        messages: [{ role: 'user', content: q }]
+      })
+    });
+
+    clearInterval(lt);
+    removeLoadingMsg();
+
+    const data = await response.json();
+    if (!response.ok) {
+      addAgentMessage(`<span class="tag tag-warn">Erro API ${response.status}</span><p>${escHtml(data?.error?.message || 'Erro desconhecido')}</p>`);
+    } else {
+      const text = data.content?.[0]?.text || 'Erro ao obter resposta.';
+      const html = `<span class="tag tag-src">Agente EN · ${window.dadosAtuais.atualizadoEm}</span>${formatAgentText(text)}
+<div class="source-row"><span class="source-chip">Dados: ${window.dadosAtuais.atualizadoEm}</span><span class="source-chip">NOAA CPC</span><span class="source-chip">IRI Columbia</span><span class="source-chip">ECMWF</span></div>`;
+      addAgentMessage(html);
+    }
+
+  } catch(e) {
+    clearInterval(lt);
+    removeLoadingMsg();
+    addAgentMessage(`<span class="tag tag-warn">Erro de conexão</span><p>Não foi possível conectar à API. Verifique sua conexão e tente novamente.</p>`);
+  }
+
+  isLoading = false;
+  document.getElementById('send-btn').disabled = false;
+}
+
+function formatAgentText(text) {
+  // Convert plain text to formatted HTML
+  return text
+    .split('\n\n')
+    .filter(p => p.trim())
+    .map(p => {
+      if (p.startsWith('- ') || p.startsWith('• ')) {
+        const items = p.split('\n').filter(l => l.trim());
+        return '<ul>' + items.map(l => `<li>${escHtml(l.replace(/^[-•]\s*/,''))}</li>`).join('') + '</ul>';
+      }
+      return `<p>${escHtml(p).replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>').replace(/\*(.+?)\*/g,'<em>$1</em>')}</p>`;
+    })
+    .join('');
+}
+
+// Init status charts on load for status panel if visited
+
+// ---- RECALCULAR ANÁLOGO DINÂMICO ----
+
+// Base de dados dos eventos históricos
+const ANALOGOS_DB = {
+  '1972/73': {
+    pico: '+2,0°C', mes: 'Jan/73', atl: 'Neutro', sub: 'Moderado',
+    nina: 'Não', base: '+0,14°C', wwb: 'Moderados', deficit: '−35%',
+    loc: 'Central', similaridade: 'Baixa',
+    perfil: 'EN moderado sem La Niña prévia, Atlântico neutro, temperatura base baixa. Impacto regional menos severo.'
+  },
+  '1982/83': {
+    pico: '+2,2°C', mes: 'Jan/83', atl: 'Quente', sub: 'Muito forte',
+    nina: 'Não', base: '+0,31°C', wwb: 'Muito fortes', deficit: '−55%',
+    loc: 'Leste', similaridade: 'Muito alta',
+    perfil: 'Sinal subsuperficial excepcional, WWB muito intensos, pico no Pacífico leste. Alta similaridade com 26/27 pelo sinal subsuperficial e WWBs, mas sem La Niña prévia e temperatura base bem mais baixa.'
+  },
+  '1997/98': {
+    pico: '+2,8°C', mes: 'Nov/97', atl: 'Muito quente', sub: 'Excepcional',
+    nina: 'Não', base: '+0,46°C', wwb: 'Excepcionais', deficit: '−60%',
+    loc: 'Leste', similaridade: 'Alta (teto)',
+    perfil: 'Evento mais intenso registrado. Pacífico leste, sinal subsuperficial excepcional. Representa o teto do cenário pessimista para 26/27 — déficit de −60% no SW da Bahia.'
+  },
+  '2015/16': {
+    pico: '+2,8°C', mes: 'Nov/15', atl: 'Muito quente', sub: 'Forte',
+    nina: 'Sim', base: '+1,01°C', wwb: 'Presentes', deficit: '−50%',
+    loc: 'Leste', similaridade: 'Alta',
+    perfil: 'Pós-La Niña, Atlântico muito quente, pico no Pacífico leste em nov/15. Análogo central atual: sinal subsuperficial abr/26 supera o de abr/15, tornando este evento o piso do cenário de planejamento.'
+  },
+  '2023/24': {
+    pico: '+1,9°C', mes: 'Dez/23', atl: 'Muito quente', sub: 'Moderado',
+    nina: 'Sim', base: '+1,35°C', wwb: 'Fracos', deficit: '−40%',
+    loc: 'Central', similaridade: 'Moderada',
+    perfil: 'Pós-La Niña, temperatura base global elevada, mas WWBs fracos e pico moderado. Referência para o cenário otimista — déficit de −40% no SW da Bahia.'
+  }
+};
+
+async function recalcularAnalogo(btn) {
+  btn.disabled = true;
+  btn.textContent = '⏳ Analisando...';
+
+  const prompt = `Você é especialista em ENSO. Analise o perfil atual do El Niño 2026/27 e eleja o evento histórico análogo mais semelhante entre os seguintes: 1972/73, 1982/83, 1997/98, 2015/16, 2023/24.
+
+PERFIL ATUAL DO EN 2026/27 (dados de abr/2026):
+- Niño 3.4: +0,5°C e subindo (pico projetado +1,5–3,2°C em out–dez/26)
+- Sinal subsuperficial: muito forte, mais intenso que abr/2015 (ECMWF)
+- Atlântico Tropical: muito quente (28–30°C), acima da média
+- Origem: pós-La Niña encerrada fev/26
+- WWB: westerly wind bursts fortes em abr/26 (Yale Climate Connections)
+- Temperatura base global: +1,5°C acima do pré-industrial
+- Probabilidade pico: 88–94% EN em OND/26 (IRI), 25% chance super EN (NOAA)
+- Localização anomalia Pacífico: ainda indefinida (leste vs central)
+
+PERFIS HISTÓRICOS:
+- 1972/73: pico +2,0°C jan/73, Pacífico central, sem La Niña prévia, base +0,14°C, WWB moderados
+- 1982/83: pico +2,2°C jan/83, Pacífico leste, sem La Niña prévia, base +0,31°C, WWB muito fortes, sinal subsuperficial excepcional
+- 1997/98: pico +2,8°C nov/97, Pacífico leste, sem La Niña prévia, base +0,46°C, WWB excepcionais
+- 2015/16: pico +2,8°C nov/15, Pacífico leste, pós-La Niña, base +1,01°C, Atlântico muito quente
+- 2023/24: pico +1,9°C dez/23, Pacífico central, pós-La Niña, base +1,35°C, WWB fracos
+
+Responda SOMENTE em JSON válido, sem markdown, sem texto fora do JSON:
+{
+  "analogo_eleito": "XXXX/XX",
+  "similaridade": "Muito alta|Alta|Moderada|Baixa",
+  "deficit_projetado_sw_bahia": "−XX a −XX%",
+  "resumo_score": "frase curta de 8 palavras máx descrevendo os critérios chave",
+  "justificativa": "2-3 frases explicando por que este evento foi eleito e o que isso implica para pecuária em Itaju do Colônia"
+}`;
+
+  try {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 400,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+
+    const data = await response.json();
+    let text = data.content?.[0]?.text || '';
+    // limpar possível markdown residual
+    text = text.replace(/```json|```/g, '').trim();
+    const result = JSON.parse(text);
+
+    const evento = result.analogo_eleito;
+    const db = ANALOGOS_DB[evento] || {};
+
+    // Atualizar banner
+    document.getElementById('analogo-titulo').textContent = 'El Niño ' + evento;
+    document.getElementById('analogo-titulo').style.color = 'var(--info)';
+    document.getElementById('analogo-score').textContent =
+      'Similaridade: ' + result.similaridade + ' · Pico ' + (db.pico||'') + ' · Pac. ' + (db.loc||'') + ' · ' + (db.nina==='Sim'?'Pós-La Niña':'Sem La Niña prévia');
+    document.getElementById('analogo-deficit').querySelector('div:nth-child(2)').textContent = result.deficit_projetado_sw_bahia;
+    document.getElementById('analogo-justificativa').textContent = result.justificativa;
+
+    // Atualizar cabeçalho da tabela
+    document.getElementById('th-analogo').textContent = evento + ' (real)';
+
+    // Atualizar células da tabela com dados do DB
+    if (db.pico)    document.getElementById('cmp-pico-ref').textContent    = db.pico;
+    if (db.mes)     document.getElementById('cmp-mes-ref').textContent     = db.mes;
+    if (db.atl)     document.getElementById('cmp-atl-ref').textContent     = db.atl;
+    if (db.sub)     document.getElementById('cmp-sub-ref').textContent     = db.sub;
+    if (db.nina)    document.getElementById('cmp-nina-ref').textContent    = db.nina;
+    if (db.base)    document.getElementById('cmp-base-ref').textContent    = db.base;
+    if (db.wwb)     document.getElementById('cmp-wwb-ref').textContent     = db.wwb;
+    if (db.deficit) document.getElementById('cmp-deficit-ref').textContent = db.deficit;
+    if (db.loc)     document.getElementById('cmp-loc-ref').textContent     = db.loc;
+
+    // Cor da borda do banner por similaridade
+    const banner = document.getElementById('analogo-banner');
+    const cores = { 'Muito alta': '#e0a0a0', 'Alta': '#90b8d8', 'Moderada': '#e0c070', 'Baixa': '#b0b0b0' };
+    banner.style.borderColor = cores[result.similaridade] || '#90b8d8';
+    const bgs = { 'Muito alta': 'var(--danger-bg)', 'Alta': 'var(--info-bg)', 'Moderada': 'var(--warn-bg)', 'Baixa': 'var(--bg2)' };
+    banner.style.background = bgs[result.similaridade] || 'var(--info-bg)';
+
+    // Atualizar data no rodapé
+    const now = new Date();
+    const dataStr = now.toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' });
+    btn.textContent = '🔄 Recalcular análogo';
+
+    // Flash visual
+    banner.style.transition = 'opacity .3s';
+    banner.style.opacity = '0.4';
+    setTimeout(() => { banner.style.opacity = '1'; }, 300);
+
+  } catch(e) {
+    console.error(e);
+    btn.textContent = '⚠ Erro — tente novamente';
+  }
+
+  btn.disabled = false;
+}
+
+
+
+
+window._apiKey = "APIKEY_STORED_HERE";  // Substituído automaticamente ao salvar
+
+function saveApiKey() {
+  const val = document.getElementById('apikey-input')?.value?.trim();
+  if (!val || !val.startsWith('sk-')) {
+    alert('Chave inválida. Deve começar com sk-ant-api03-...');
+    return;
+  }
+  window._apiKey = val;
+  try { localStorage.setItem('enmonitor_apikey', val); } catch(e) {}
+  _embedKeyAndSave(val);
+  renderApiKeyState();
+}
+
+function _embedKeyAndSave(key) {
+  try {
+    const html = document.documentElement.outerHTML;
+    // Substituir o placeholder ou a chave anterior pelo novo valor
+    const updated = html.replace(/window\._apiKey = "[^"]*";  \/\/ Substituído automaticamente ao salvar/,
+      `window._apiKey = "${key}";  // Substituído automaticamente ao salvar`);
+    const blob = new Blob([updated], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'el_nino_monitor.html';
+    a.style.display = 'none';
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 2000);
+    // Mostrar aviso
+    const bar = document.getElementById('apikey-bar');
+    const notice = document.createElement('span');
+    notice.style.cssText = 'font-size:10px;color:var(--ok);margin-left:8px';
+    notice.textContent = '✓ Arquivo salvo com chave embutida — substitua o arquivo antigo pelo novo download';
+    bar.appendChild(notice);
+    setTimeout(() => notice.remove(), 8000);
+  } catch(e) {
+    console.warn('Auto-save não disponível:', e);
+  }
+}
+
+function clearApiKey() {
+  window._apiKey = "";
+  try { localStorage.removeItem('enmonitor_apikey'); } catch(e) {}
+  renderApiKeyState();
+}
+
+function renderApiKeyState() {
+  const bar = document.getElementById('apikey-bar');
+  if (!bar) return;
+  const isValid = window._apiKey && window._apiKey !== 'APIKEY_STORED_HERE' && window._apiKey.startsWith('sk-');
+  if (isValid) {
+    const masked = window._apiKey.substring(0,10) + '••••••••••' + window._apiKey.slice(-4);
+    bar.className = 'apikey-bar connected';
+    bar.innerHTML = '<label>🔑 API Key:</label>' +
+      '<span style="font-family:var(--font-mono);font-size:11px;color:var(--ok)">' + masked + '</span>' +
+      '<button class="apikey-clear" onclick="clearApiKey()">Trocar chave</button>' +
+      '<span class="apikey-status" style="color:var(--ok)">✓ Conectado — botões de atualização ativos</span>';
+  } else {
+    bar.className = 'apikey-bar';
+    bar.innerHTML = '<label>🔑 API Key Anthropic:</label>' +
+      '<input class="apikey-input" id="apikey-input" type="password" placeholder="sk-ant-api03-..." autocomplete="off" spellcheck="false" onkeydown="if(event.key===&#39;Enter&#39;) saveApiKey()">' +
+      '<button class="apikey-btn" onclick="saveApiKey()">Conectar</button>' +
+      '<span class="apikey-status" id="apikey-status">⚠ Necessária para usar os botões "Atualizar análise" e "Recalcular análogo" fora do Claude.ai</span>';
+  }
+}
+
+// ---- RECALCULAR ANÁLOGO ----
+
+// Base de dados dos eventos canônicos EN >= 2.0°C desde 1950
+const EVENTOS_EN = {
+  '1972/73': {
+    label: 'El Niño 1972/73',
+    pico_nino34: '+2,0°C',
+    mes_pico: 'Nov/72',
+    atlantico: 'Neutro',
+    subsuperficial: 'Moderado',
+    pos_lanina: 'Sim',
+    base_global: '−0,01°C',
+    wwb: 'Moderadas',
+    deficit_bahia: '−30%',
+    loc_anomalia: 'Leste',
+    cor: '#1a5c8a',
+    similaridade_base: 40,
+    deficit_num: 30
+  },
+  '1982/83': {
+    label: 'El Niño 1982/83',
+    pico_nino34: '+2,2°C',
+    mes_pico: 'Dez/82',
+    atlantico: 'Quente',
+    subsuperficial: 'Muito forte',
+    pos_lanina: 'Não',
+    base_global: '+0,19°C',
+    wwb: 'Intensas',
+    deficit_bahia: '−45%',
+    loc_anomalia: 'Leste',
+    cor: '#1a5c8a',
+    similaridade_base: 65,
+    deficit_num: 45
+  },
+  '1997/98': {
+    label: 'El Niño 1997/98',
+    pico_nino34: '+2,8°C',
+    mes_pico: 'Nov/97',
+    atlantico: 'Muito quente',
+    subsuperficial: 'Extremo',
+    pos_lanina: 'Não',
+    base_global: '+0,46°C',
+    wwb: 'Muito intensas',
+    deficit_bahia: '−60%',
+    loc_anomalia: 'Leste',
+    cor: '#9e2020',
+    similaridade_base: 72,
+    deficit_num: 60
+  },
+  '2015/16': {
+    label: 'El Niño 2015/16',
+    pico_nino34: '+2,8°C',
+    mes_pico: 'Nov/15',
+    atlantico: 'Muito quente',
+    subsuperficial: 'Forte',
+    pos_lanina: 'Sim',
+    base_global: '+1,01°C',
+    wwb: 'Presentes',
+    deficit_bahia: '−50%',
+    loc_anomalia: 'Leste',
+    cor: '#1a4a7a',
+    similaridade_base: 85,
+    deficit_num: 50
+  },
+  '2023/24': {
+    label: 'El Niño 2023/24',
+    pico_nino34: '+1,9°C',
+    mes_pico: 'Dez/23',
+    atlantico: 'Muito quente',
+    subsuperficial: 'Forte',
+    pos_lanina: 'Sim',
+    base_global: '+1,35°C',
+    wwb: 'Moderadas',
+    deficit_bahia: '−35%',
+    loc_anomalia: 'Central',
+    cor: '#7a5c10',
+    similaridade_base: 60,
+    deficit_num: 35
+  }
+};
+
+async function recalcularAnalogo(btn) {
+  btn.disabled = true;
+  btn.textContent = '⏳ Buscando dados...';
+
+  const dataISO = new Date().toISOString().slice(0,10);
+  const ano = new Date().getFullYear();
+
+  try {
+    const apiKey = window._apiKey || '';
+    const hdrs = { 'Content-Type': 'application/json' };
+    if (apiKey) {
+      hdrs['x-api-key'] = apiKey;
+      hdrs['anthropic-version'] = '2023-06-01';
+      hdrs['anthropic-dangerous-direct-browser-access'] = 'true';
+    }
+
+    // ── FASE 1: buscar dados e gerar resumo em texto livre ──
+    const promptBusca = `Data: ${dataISO}. Busque no NOAA CPC e IRI os dados ENSO mais recentes de ${ano}: valor atual do Niño 3.4, probabilidades de El Niño para os próximos trimestres, e condição do Pacífico subsuperficial. Resuma os dados encontrados em texto simples, citando mês e fonte.`;
+
+    let messages = [{ role: 'user', content: promptBusca }];
+    let resumoBusca = '';
+    let attempts = 0;
+
+    while (attempts < 6) {
+      attempts++;
+      const r1 = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: hdrs,
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-6',
+          max_tokens: 600,
+          tools: [{ type: 'web_search_20250305', name: 'web_search' }],
+          messages
+        })
+      });
+      const d1 = await r1.json();
+      if (!r1.ok) throw new Error('HTTP ' + r1.status + ': ' + (d1?.error?.message || ''));
+
+      if (d1.stop_reason === 'end_turn') {
+        resumoBusca = (d1.content || []).filter(b => b.type === 'text').map(b => b.text).join('');
+        break;
+      }
+
+      if (d1.stop_reason === 'tool_use') {
+        // Passar resposta do assistente + resultados de busca para continuar
+        messages.push({ role: 'assistant', content: d1.content });
+        // Os resultados reais do web_search já vêm nos blocos tool_result dentro de d1.content
+        // Precisamos confirmar o recebimento com tool_result vazio para continuar o turn
+        const confirmations = (d1.content || [])
+          .filter(b => b.type === 'tool_use')
+          .map(b => ({ type: 'tool_result', tool_use_id: b.id, content: 'OK' }));
+        messages.push({ role: 'user', content: confirmations });
+        btn.textContent = '⏳ Processando busca...';
+        continue;
+      }
+
+      resumoBusca = (d1.content || []).filter(b => b.type === 'text').map(b => b.text).join('');
+      break;
+    }
+
+    if (!resumoBusca) throw new Error('Sem dados da busca');
+
+    // ── FASE 2: gerar JSON com base no resumo ──
+    btn.textContent = '⏳ Gerando análise...';
+
+    const promptJson = `Com base nos dados ENSO abaixo, eleja o análogo histórico mais próximo ao EN 2026/27 entre: 1972/73(pico+2,0°C,déficit-30%), 1982/83(+2,2°C,-55%), 1997/98(+2,8°C,-60%), 2015/16(+2,8°C,-50%), 2023/24(+1,9°C,-35%).
+
+CONTEXTO ADICIONAL (ECMWF Science Blog, Stockdale abr/26):
+- Análogo oficial ECMWF = 2023/24 com sinal mais forte (conservador)
+- Sinal subsuperficial mar/26 mais coerente que mar/23 e muito mais forte que mar/17
+- Spring predictability barrier superada em mai/jun — confiança aumentando agora
+- Contraponto 2017: pior forecast de março em 33 anos do SEAS5 (EN previsto → La Niña); porém sinal 2026 muito mais coerente que 2017
+
+DADOS ENCONTRADOS:
+${resumoBusca}
+
+Responda SOMENTE com JSON válido, sem texto antes ou depois, sem markdown:
+{"evento":"YYYY/YY","similaridade":"Muito alta|Alta|Moderada|Baixa","score":0-100,"deficit_sw_bahia":"−XX%","deficit_num":0,"justificativa":"2 frases: por que este análogo, dados atuais e impacto na pecuária de Itaju do Colônia BA","teto":"YYYY/YY","teto_label":"Nome do evento teto","analogo_ecmwf":"2023/24","resumo_tabela":{"pico_nino34":"valor","mes_pico":"Mês/AA","atlantico":"descrição","subsuperficial":"descrição","pos_lanina":"Sim|Não","base_global":"+X,XX°C","wwb":"descrição","loc_anomalia":"Leste|Central|Leste/Central"}}`;
+
+    const r2 = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: hdrs,
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 600,
+        messages: [{ role: 'user', content: promptJson }]
+      })
+    });
+    const d2 = await r2.json();
+    if (!r2.ok) throw new Error('HTTP ' + r2.status + ': ' + (d2?.error?.message || ''));
+
+    const raw = (d2.content || []).filter(b => b.type === 'text').map(b => b.text).join('');
+    const jsonStr = raw.replace(/```json|```/g, '').trim();
+    const result = JSON.parse(jsonStr);
+
+    const ev = EVENTOS_EN[result.evento] || EVENTOS_EN['2015/16'];
+    const teto = EVENTOS_EN[result.teto] || EVENTOS_EN['1997/98'];
+    const rt = result.resumo_tabela || {};
+
+    // Atualizar banner
+    document.getElementById('analogo-titulo').textContent = 'El Niño ' + result.evento;
+    document.getElementById('analogo-titulo').style.color = ev.cor;
+    document.getElementById('analogo-score').innerHTML =
+      'Similaridade: <strong>' + result.similaridade + '</strong> · Score ' + result.score + '/100 · Teto: ' + (teto.label || result.teto_label);
+    document.getElementById('analogo-deficit').innerHTML =
+      '<div style="font-size:10px;color:var(--text3)">Déficit histórico SW Bahia</div>' +
+      '<div style="font-size:22px;font-weight:600;color:var(--warn)">' + result.deficit_sw_bahia + '</div>' +
+      '<div style="font-size:10px;color:var(--text3)">set–jan do evento</div>';
+    document.getElementById('analogo-justificativa').textContent = result.justificativa;
+    document.getElementById('analogo-banner').style.borderColor = ev.cor;
+    document.getElementById('analogo-banner').style.background =
+      result.evento === '1997/98' ? 'var(--danger-bg)' :
+      result.evento === '1982/83' ? 'var(--warn-bg)' : 'var(--info-bg)';
+
+    // Atualizar cabeçalho da tabela
+    document.getElementById('th-analogo').textContent = result.evento + ' (real)';
+    document.getElementById('th-analogo').style.color = ev.cor;
+
+    // Atualizar células da tabela
+    const setCel = (id, val) => { const el = document.getElementById(id); if(el){ el.textContent = val; el.style.color = ev.cor; }};
+    setCel('cmp-pico-ref',    rt.pico_nino34    || ev.pico_nino34);
+    setCel('cmp-mes-ref',     rt.mes_pico        || ev.mes_pico);
+    setCel('cmp-atl-ref',     rt.atlantico       || ev.atlantico);
+    setCel('cmp-sub-ref',     rt.subsuperficial  || ev.subsuperficial);
+    setCel('cmp-nina-ref',    rt.pos_lanina      || ev.pos_lanina);
+    setCel('cmp-base-ref',    rt.base_global     || ev.base_global);
+    setCel('cmp-wwb-ref',     rt.wwb             || ev.wwb);
+    setCel('cmp-deficit-ref', result.deficit_sw_bahia || ev.deficit_bahia);
+    setCel('cmp-loc-ref',     rt.loc_anomalia    || ev.loc_anomalia);
+
+    // Atualizar veredicto textual
+    document.getElementById('veredicto-texto').innerHTML =
+      '<p><strong>Veredicto (' + new Date().toLocaleDateString('pt-BR',{month:'short',year:'numeric'}) + '):</strong> ' +
+      result.justificativa + ' O cenário de teto aponta para <strong>' + (result.teto_label || result.teto) +
+      '</strong>, com déficit de até ' + (teto.deficit_bahia || '−60%') + ' no SW da Bahia.</p>';
+
+    // Atualizar título do menu
+    const menuItem = document.querySelector('[data-panel="veredicto"] .panel-item-title');
+    if (menuItem) menuItem.textContent = '🔬 Análogo: ' + result.evento;
+
+    // ---- ESPELHO: salvar dados atualizados para o chat ----
+    window.dadosAtuais = {
+      atualizadoEm: new Date().toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' }),
+      nino34: rt.pico_nino34 || 'Atualizado via busca',
+      condicao: 'Dados atualizados via NOAA/IRI em ' + new Date().toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' }),
+      subsuperficie: rt.subsuperficial || ev.subsuperficial,
+      probNoaa: 'Ver dados buscados em ' + new Date().toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' }),
+      probIri: 'Ver dados buscados em ' + new Date().toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' }),
+      ecmwf: rt.subsuperficial || 'Dados atualizados',
+      atlantico: rt.atlantico || ev.atlantico,
+      analogo: 'EN ' + result.evento + ' (' + result.similaridade + ' similaridade)',
+      teto: 'EN ' + (result.teto || '1997/98'),
+      deficitProjetado: result.deficit_sw_bahia || ev.deficit_bahia,
+      justificativa: result.justificativa || ''
+    };
+
+    // Atualizar header
+    const hs = document.getElementById('header-status');
+    if (hs) hs.textContent = 'Agente ativo · Atualizado ' + new Date().toLocaleDateString('pt-BR',{month:'short',year:'numeric'});
+
+    btn.textContent = '🔄 Recalcular análogo';
+
+  } catch(e) {
+    document.getElementById('analogo-justificativa').textContent = 'Erro ao recalcular: ' + e.message;
+    btn.textContent = '🔄 Recalcular análogo';
+  }
+
+  btn.disabled = false;
+}
+
+
+// ---- EMBASAMENTO DINÂMICO ----
+async function atualizarEmbasamento(id, fonte, elId, btn) {
+  const el = document.getElementById(elId);
+  if (!el) return;
+  btn.disabled = true;
+  btn.textContent = '⏳ Atualizando...';
+  el.innerHTML = '<span class="emb-loading">Consultando fontes e gerando análise atualizada...</span>';
+
+  // Timeout de segurança: libera botão após 30s se travar
+  const safetyTimer = setTimeout(() => {
+    btn.disabled = false;
+    btn.textContent = '↺ Atualizar análise';
+    if (el.innerHTML.includes('Consultando')) {
+      el.innerHTML = '<span class="emb-loading" style="color:var(--danger)">Timeout — tente novamente.</span>';
+    }
+  }, 30000);
+
+  const dataISO = new Date().toISOString().slice(0,10);
+  const anoAtual = new Date().getFullYear();
+
+  try {
+    const apiKey = window._apiKey || '';
+    const headers = { 'Content-Type': 'application/json' };
+    if (apiKey) {
+      headers['x-api-key'] = apiKey;
+      headers['anthropic-version'] = '2023-06-01';
+      headers['anthropic-dangerous-direct-browser-access'] = 'true';
+    }
+
+    // ── FASE 1: buscar dados em texto livre ──
+    let messages = [{ role: 'user', content: `Data: ${dataISO}. Busque os dados mais recentes de "${fonte}" sobre ENSO/El Niño ${anoAtual}. Resuma em texto simples o que encontrou, com valores numéricos e mês de referência.` }];
+    let resumoBusca = '';
+    let attempts = 0;
+
+    while (attempts < 6) {
+      attempts++;
+      const response = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-6',
+          max_tokens: 500,
+          tools: [{ type: 'web_search_20250305', name: 'web_search' }],
+          messages
+        })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        const msg = data?.error?.message || 'HTTP ' + response.status;
+        el.innerHTML = '<span class="emb-loading" style="color:var(--danger)">Erro ' + response.status + ': ' + msg + '</span>';
+        clearTimeout(safetyTimer);
+        btn.disabled = false;
+        btn.textContent = '↺ Atualizar análise';
+        return;
+      }
+
+      if (data.stop_reason === 'end_turn') {
+        resumoBusca = (data.content || []).filter(b => b.type === 'text').map(b => b.text).join('');
+        break;
+      }
+
+      if (data.stop_reason === 'tool_use') {
+        messages.push({ role: 'assistant', content: data.content });
+        const confirmations = (data.content || [])
+          .filter(b => b.type === 'tool_use')
+          .map(b => ({ type: 'tool_result', tool_use_id: b.id, content: 'OK' }));
+        messages.push({ role: 'user', content: confirmations });
+        continue;
+      }
+
+      resumoBusca = (data.content || []).filter(b => b.type === 'text').map(b => b.text).join('');
+      break;
+    }
+
+    if (!resumoBusca) {
+      el.innerHTML = '<span class="emb-loading" style="color:var(--danger)">Sem dados da busca.</span>';
+      clearTimeout(safetyTimer);
+      btn.disabled = false;
+      btn.textContent = '↺ Atualizar análise';
+      return;
+    }
+
+    // ── FASE 2: gerar parágrafo analítico ──
+    const promptParagrafo = `Você é analista ENSO aplicado à pecuária de corte no SW da Bahia (Itaju do Colônia). Com base nos dados abaixo de "${fonte}", escreva 1 parágrafo (4-5 frases, ~100 palavras): cite o dado mais recente com mês/ano, compare com EN 2015/16 no mesmo período, indique impacto na pecuária (déficit hídrico, pasto, lotação). Técnico, quantitativo. SÓ o parágrafo, sem título nem markdown.
+
+DADOS:
+${resumoBusca}`;
+
+    const r2 = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 400,
+        messages: [{ role: 'user', content: promptParagrafo }]
+      })
+    });
+    const d2 = await r2.json();
+    if (!r2.ok) throw new Error('HTTP ' + r2.status);
+
+    const finalText = (d2.content || []).filter(b => b.type === 'text').map(b => b.text).join('');
+
+    if (finalText) {
+      clearTimeout(safetyTimer);
+      el.textContent = finalText;
+      const chip = btn.closest('.emb-footer')?.querySelector('.source-chip');
+      if (chip) chip.textContent = new Date().toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' });
+
+      // ---- ESPELHO: atualizar campo relevante em dadosAtuais ----
+      const mesAtual = new Date().toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' });
+      window.dadosAtuais.atualizadoEm = mesAtual;
+      if (fonte.includes('NOAA')) window.dadosAtuais.probNoaa = finalText.substring(0, 120) + '…';
+      else if (fonte.includes('IRI')) window.dadosAtuais.probIri = finalText.substring(0, 120) + '…';
+      else if (fonte.includes('ECMWF')) window.dadosAtuais.ecmwf = finalText.substring(0, 120) + '…';
+      else if (fonte.includes('INMET')) window.dadosAtuais.condicao = finalText.substring(0, 120) + '…';
+      else if (fonte.includes('Yale') || fonte.includes('WWB')) window.dadosAtuais.subsuperficie = finalText.substring(0, 120) + '…';
+      else if (fonte.includes('Atlântico') || fonte.includes('CEMADEN')) window.dadosAtuais.atlantico = finalText.substring(0, 120) + '…';
+
+    } else {
+      el.innerHTML = '<span class="emb-loading" style="color:var(--danger)">Sem resposta do modelo após busca.</span>';
+    }
+    btn.textContent = '↺ Atualizar análise';
+
+  } catch(e) {
+    clearTimeout(safetyTimer);
+    el.innerHTML = '<span class="emb-loading" style="color:var(--danger)">Erro: ' + e.message + '</span>';
+    btn.textContent = '↺ Atualizar análise';
+  }
+  clearTimeout(safetyTimer);
+  btn.disabled = false;
+}
+
+// ---- ANÁLISE CRÍTICA ----
+async function gerarAnaliseCritica(btn) {
+  btn.disabled = true;
+  btn.textContent = '⏳ Buscando dados...';
+
+  const dataISO = new Date().toISOString().slice(0,10);
+  const ano = new Date().getFullYear();
+
+  document.getElementById('critica-placeholder').style.display = 'none';
+  document.getElementById('critica-container').style.display = 'block';
+  document.getElementById('critica-tabela-body').innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text3);padding:12px">⏳ Buscando dados dos modelos...</td></tr>';
+  document.getElementById('critica-consenso-texto').textContent = '⏳ Aguardando...';
+  document.getElementById('critica-acuracia').textContent = '⏳ Aguardando...';
+  document.getElementById('critica-incertezas').textContent = '⏳ Aguardando...';
+  document.getElementById('critica-recomendacao-texto').textContent = '⏳ Aguardando...';
+
+  const apiKey = window._apiKey || '';
+  const hdrs = { 'Content-Type': 'application/json' };
+  if (apiKey) {
+    hdrs['x-api-key'] = apiKey;
+    hdrs['anthropic-version'] = '2023-06-01';
+    hdrs['anthropic-dangerous-direct-browser-access'] = 'true';
+  }
+
+  // ── FASE 1: buscar dados atuais dos 3 principais modelos ──
+  const promptBusca = `Data: ${dataISO}. Busque os dados mais recentes de ENSO para ${ano} das seguintes fontes:
+1. NOAA CPC ENSO probabilities e strength probabilities (site:cpc.ncep.noaa.gov/products/analysis_monitoring/enso/roni)
+2. ECMWF SEAS5 seasonal forecast ENSO Nino 3.4 ${ano} (site:ecmwf.int ou site:climate.copernicus.eu)
+3. IRI Columbia ENSO forecast plume ${ano} (site:iri.columbia.edu)
+
+Para cada fonte, extraia: probabilidade EN por trimestre, range de Niño 3.4, intensidade esperada. Resuma em texto simples com valores e datas.`;
+
+  let messages = [{ role: 'user', content: promptBusca }];
+  let resumoBusca = '';
+  let attempts = 0;
+
+  try {
+    while (attempts < 6) {
+      attempts++;
+      const r1 = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST', headers: hdrs,
+        body: JSON.stringify({ model: 'claude-sonnet-4-6', max_tokens: 800,
+          tools: [{ type: 'web_search_20250305', name: 'web_search' }], messages })
+      });
+      const d1 = await r1.json();
+      if (!r1.ok) throw new Error('HTTP ' + r1.status);
+      if (d1.stop_reason === 'end_turn') {
+        resumoBusca = (d1.content||[]).filter(b=>b.type==='text').map(b=>b.text).join('');
+        break;
+      }
+      if (d1.stop_reason === 'tool_use') {
+        messages.push({ role: 'assistant', content: d1.content });
+        const conf = (d1.content||[]).filter(b=>b.type==='tool_use')
+          .map(b => ({ type: 'tool_result', tool_use_id: b.id, content: 'OK' }));
+        messages.push({ role: 'user', content: conf });
+        btn.textContent = '⏳ Processando fontes...';
+        continue;
+      }
+      resumoBusca = (d1.content||[]).filter(b=>b.type==='text').map(b=>b.text).join('');
+      break;
+    }
+
+    if (!resumoBusca) throw new Error('Sem dados da busca');
+
+    // ── FASE 2: gerar análise crítica estruturada em JSON ──
+    btn.textContent = '⏳ Gerando análise...';
+
+    const promptAnalise = `Você é climatologista especialista em ENSO com foco em impactos no NE brasileiro. Data: ${dataISO}.
+
+DADOS BUSCADOS:
+${resumoBusca}
+
+CONTEXTO FIXO (acurácia histórica conhecida):
+- ECMWF SEAS5: melhor skill geral para ENSO (correlação 0.85+ para lead 1–3 meses). Tende a ser bem calibrado mas levemente otimista em eventos fortes.
+- NOAA CPC (consenso humano + CFSv2): segundo melhor skill, mais conservador que ECMWF. Forte para NE Brasil por usar RONI.
+- IRI multi-model (23+ modelos): melhor calibração probabilística. Modelos dinâmicos sistematicamente mais quentes que estatísticos (diferença média 0,3–0,5°C em OND).
+- CFSv2 (NCEP): skill razoável, viés quente em eventos moderados, subestima dissipação.
+- Modelos estatísticos IRI (CPC MRKOV, CSU CLIPR): conservadores, bons para eventos moderados, underperformam em eventos fortes.
+- Pior caso histórico: forecast março/2017 (ECMWF) — EN previsto, La Niña ocorreu.
+
+PROPRIEDADE: 1.350 ha, 2.658 cab, Itaju do Colônia BA, microclima Am. Série histórica: EN forte → déficit −40 a −60% set–jan; EN moderado → −20 a −35%.
+IOD positivo previsto ago/26 (56% IRI) amplifica o déficit em 5–15 pontos percentuais adicionais.
+
+Gere a análise em JSON válido, sem markdown, sem texto fora do JSON:
+{
+  "consenso_titulo": "frase curta 6 palavras máx descrevendo o consenso atual",
+  "consenso_texto": "parágrafo 4-5 frases: consenso entre modelos, nível de confiança, o que diverge, dados de ${dataISO}",
+  "data_analise": "${dataISO}",
+  "tabela_modelos": [
+    {"modelo":"ECMWF SEAS5","tipo":"Dinâmico","acuracia":"★★★★★ · Melhor skill geral","nino34_ond":"valor °C","range_ensemble":"min–max °C","vies":"Levemente otimista em eventos fortes"},
+    {"modelo":"NOAA CPC (consenso)","tipo":"Híbrido","acuracia":"★★★★☆ · Conservador · forte NE","nino34_ond":"valor °C","range_ensemble":"—","vies":"Conservador"},
+    {"modelo":"IRI Multi-model","tipo":"Ensemble 23+","acuracia":"★★★★☆ · Melhor calibração prob.","nino34_ond":"valor °C","range_ensemble":"dinâmico vs estatístico","vies":"Dinâmicos +0,3–0,5°C vs estatísticos"},
+    {"modelo":"NCEP CFSv2","tipo":"Dinâmico","acuracia":"★★★☆☆ · Viés quente","nino34_ond":"valor °C","range_ensemble":"—","vies":"Quente em eventos moderados"},
+    {"modelo":"Modelos estatísticos IRI","tipo":"Estatístico","acuracia":"★★★☆☆ · Conservadores","nino34_ond":"valor °C","range_ensemble":"—","vies":"Underperformam em EN forte"}
+  ],
+  "acuracia_historica": "texto 5-6 frases comparando acurácia dos modelos em 2015/16, 2023/24 e outros eventos relevantes. Citar erros conhecidos.",
+  "cenario_moderado": {"deficit":"−XX a −XX%","texto":"1 frase impacto pasto Itaju"},
+  "cenario_forte": {"deficit":"−XX a −XX%","texto":"1 frase impacto pasto Itaju"},
+  "cenario_super": {"deficit":"−XX a −XX%","texto":"1 frase impacto pasto Itaju"},
+  "incertezas": "texto 5-7 frases críticas: o que pode estar errado, vieses conhecidos, spring barrier, IOD, temperatura base elevada, analogias imperfeitas",
+  "recomendacao": "texto 4-5 frases: recomendação operacional para pecuária em Itaju baseada no range de incerteza, não no cenário central"
+}`;
+
+    const r2 = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST', headers: hdrs,
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-6', max_tokens: 1200,
+        messages: [{ role: 'user', content: promptAnalise }]
+      })
+    });
+    const d2 = await r2.json();
+    if (!r2.ok) throw new Error('HTTP ' + r2.status);
+
+    const raw = (d2.content||[]).filter(b=>b.type==='text').map(b=>b.text).join('');
+    const result = JSON.parse(raw.replace(/```json|```/g,'').trim());
+
+    // Preencher consenso
+    document.getElementById('critica-consenso-titulo').textContent = result.consenso_titulo || '—';
+    document.getElementById('critica-consenso-texto').textContent = result.consenso_texto || '';
+    document.getElementById('critica-data').textContent = result.data_analise || dataISO;
+
+    // Preencher tabela
+    const tbody = document.getElementById('critica-tabela-body');
+    tbody.innerHTML = '';
+    (result.tabela_modelos || []).forEach(m => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td><strong>${m.modelo}</strong></td><td style="font-size:11px">${m.tipo}</td><td style="font-size:11px">${m.acuracia}</td><td style="font-weight:600;color:var(--danger)">${m.nino34_ond}</td><td style="font-size:11px;color:var(--text2)">${m.range_ensemble}</td><td style="font-size:11px;color:var(--warn)">${m.vies}</td>`;
+      tbody.appendChild(tr);
+    });
+
+    // Preencher acurácia histórica
+    document.getElementById('critica-acuracia').textContent = result.acuracia_historica || '';
+
+    // Preencher cenários
+    if (result.cenario_moderado) {
+      document.getElementById('critica-val-fraco').textContent = result.cenario_moderado.deficit;
+      document.getElementById('critica-sub-fraco').textContent = result.cenario_moderado.texto;
+    }
+    if (result.cenario_forte) {
+      document.getElementById('critica-val-forte').textContent = result.cenario_forte.deficit;
+      document.getElementById('critica-sub-forte').textContent = result.cenario_forte.texto;
+    }
+    if (result.cenario_super) {
+      document.getElementById('critica-val-super').textContent = result.cenario_super.deficit;
+      document.getElementById('critica-sub-super').textContent = result.cenario_super.texto;
+    }
+
+    // Preencher incertezas e recomendação
+    document.getElementById('critica-incertezas').textContent = result.incertezas || '';
+    document.getElementById('critica-recomendacao-texto').textContent = result.recomendacao || '';
+
+    // Espelhar dados no dadosAtuais
+    window.dadosAtuais.atualizadoEm = dataISO;
+    if (result.tabela_modelos && result.tabela_modelos[0]) {
+      window.dadosAtuais.ecmwf = result.tabela_modelos[0].nino34_ond + ' OND/26 (ECMWF SEAS5)';
+    }
+
+    // Atualizar header
+    const hs = document.getElementById('header-status');
+    if (hs) hs.textContent = 'Agente ativo · Análise crítica atualizada ' +
+      new Date().toLocaleDateString('pt-BR',{month:'short',year:'numeric'});
+
+    btn.textContent = '🔄 Atualizar análise crítica';
+
+  } catch(e) {
+    document.getElementById('critica-consenso-texto').textContent = 'Erro: ' + e.message;
+    document.getElementById('critica-tabela-body').innerHTML = '<tr><td colspan="6" style="color:var(--danger);padding:12px">' + e.message + '</td></tr>';
+    btn.textContent = '⚠ Erro — tente novamente';
+  }
+
+  btn.disabled = false;
+}
+
+
+  // 1. Chave embutida no arquivo tem prioridade
+  if (!window._apiKey || window._apiKey === 'APIKEY_STORED_HERE' || !window._apiKey.startsWith('sk-')) {
+    // 2. Fallback: localStorage
+    try {
+      const saved = localStorage.getItem('enmonitor_apikey');
+      if (saved) window._apiKey = saved;
+    } catch(e) {}
+  }
+  renderApiKeyState();
+  setPanel('chat');
+  // Data dinâmica no header
+  const hs = document.getElementById('header-status');
+  if (hs) {
+    const dataHoje = new Date().toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' });
+    hs.textContent = 'Agente ativo · ' + dataHoje + ' · Use os botões para buscar dados atuais';
+  }
+});
+</script>
+</body>
+</html>
